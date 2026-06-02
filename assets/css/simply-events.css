@@ -1,0 +1,356 @@
+/*
+ * Simply Events — Front-end styles
+ * Version: 1.0.0
+ *
+ * Neutral wireframe using --client-* tokens from Simply Starter.
+ * Falls back to grays on any other theme.
+ * Override tokens in your client config for branded colors.
+ *
+ * Token map:
+ *   --se-accent         Date block bg      → --client-accent (fallback: #555)
+ *   --se-accent-text    Date block text     → --client-accent-text (fallback: #fff)
+ *   --se-heading        Title + filter text → --client-heading (fallback: #2d2d2d)
+ *   --se-bg             Section bg          → --client-section-light-bg (fallback: #f2f2f2)
+ *   --se-font-display   Titles + dates      → --client-font-display (fallback: Arial)
+ *   --se-font-primary   Body text           → --client-font-primary (fallback: Arial)
+ */
+
+:root {
+	--se-accent:       var( --client-accent,             #555555 );
+	--se-accent-text:  var( --client-accent-text,        #ffffff );
+	--se-heading:      var( --client-heading,            #2d2d2d );
+	--se-bg:           var( --client-section-light-bg,   #f2f2f2 );
+	--se-card-bg:      #ffffff;
+	--se-text-muted:   #888888;
+	--se-font-display: var( --client-font-display,       Arial, sans-serif );
+	--se-font-primary: var( --client-font-primary,       Arial, sans-serif );
+	--se-radius:       8px;
+	--se-gap:          16px;
+}
+
+
+/* Block wrapper
+--------------------------------------------- */
+
+.se-events-block {
+}
+
+
+/* Header row — title | filter tabs | CTA
+--------------------------------------------- */
+
+.se-events-header {
+	display: flex;
+	align-items: center;
+	gap: 32px;
+	margin-bottom: 40px;
+	flex-wrap: wrap;
+}
+
+.se-events-title {
+	font-family: var( --se-font-display );
+	font-size: clamp( 1.8rem, 3vw, 2.6rem );
+	font-weight: 700;
+	text-transform: uppercase;
+	color: var( --se-heading );
+	line-height: 1.05;
+	margin: 0;
+	flex-shrink: 0;
+}
+
+/* Filter tabs */
+.se-events-filter {
+	display: flex;
+	align-items: center;
+	gap: 28px;
+	flex: 1;
+	flex-wrap: wrap;
+}
+
+.se-filter-btn {
+	background: none !important;
+	background-color: transparent !important;
+	border: none !important;
+	border-bottom: 2px solid transparent !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	color: #000 !important;
+	font-family: var( --se-font-display );
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	cursor: pointer;
+	padding: 4px 0 !important;
+	transition: border-color 0.2s ease;
+	transform: none !important;
+}
+
+.se-filter-btn:hover {
+	background: none !important;
+	background-color: transparent !important;
+	color: #000 !important;
+	border-bottom-color: rgba( 0, 0, 0, 0.3 ) !important;
+	transform: none !important;
+}
+
+.se-filter-btn.is-active {
+	border-bottom-color: #000 !important;
+}
+
+/* CTA button */
+.se-events-cta {
+	border: 2px solid var( --client-nav-bg, #2d2d2d ) !important;
+	border-radius: 100px !important;
+	color: var( --client-nav-bg, #2d2d2d ) !important;
+	background: none !important;
+	background-color: transparent !important;
+	font-family: var( --se-font-display );
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	padding: 8px 20px !important;
+	text-decoration: none !important;
+	white-space: nowrap;
+	transition: background-color 0.2s ease, color 0.2s ease;
+	flex-shrink: 0;
+}
+
+.se-events-cta:hover {
+	background-color: var( --client-nav-bg, #2d2d2d ) !important;
+	color: #ffffff !important;
+	text-decoration: none !important;
+}
+
+
+/* Events grid
+--------------------------------------------- */
+
+.se-events-grid {
+	display: grid;
+	grid-template-columns: repeat( 5, 1fr );
+	gap: var( --se-gap );
+}
+
+@media ( max-width: 1200px ) {
+	.se-events-grid { grid-template-columns: repeat( 4, 1fr ); }
+}
+
+@media ( max-width: 900px ) {
+	.se-events-grid { grid-template-columns: repeat( 3, 1fr ); }
+}
+
+@media ( max-width: 600px ) {
+	.se-events-grid { grid-template-columns: repeat( 2, 1fr ); }
+}
+
+
+/* Event card
+--------------------------------------------- */
+
+.se-event-card {
+	background: var( --se-card-bg );
+	border-radius: var( --se-radius );
+	overflow: hidden;
+	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.08 );
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	display: flex;
+	flex-direction: column;
+}
+
+.se-event-card:hover {
+	transform: translateY( -3px );
+	box-shadow: 0 6px 20px rgba( 0, 0, 0, 0.12 );
+}
+
+.se-event-card {
+	transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.se-event-card.is-hiding {
+	opacity: 0;
+	transform: scale( 0.96 );
+}
+
+.se-event-card.is-hidden {
+	display: none;
+}
+
+@keyframes se-card-in {
+	from { opacity: 0; transform: translateY( 6px ); }
+	to   { opacity: 1; transform: translateY( 0 ); }
+}
+
+.se-event-card.is-showing {
+	animation: se-card-in 0.25s ease forwards;
+}
+
+
+/* Date block — red top section
+--------------------------------------------- */
+
+.se-event-card__date {
+	background-color: var( --se-accent );
+	color: #ffffff !important;
+	padding: 16px 20px 14px;
+	display: flex;
+	align-items: flex-start;
+	gap: 6px;
+	min-height: 80px;
+}
+
+/* Start date column */
+.se-event-card__date-start {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	line-height: 1;
+}
+
+/* End date column — aligns to top of start date */
+.se-event-card__date-end {
+	display: flex;
+	align-items: flex-start;
+	gap: 2px;
+	line-height: 1;
+	padding-top: 8px; /* nudge down slightly from top edge */
+}
+
+.se-event-card__date-end-col {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	line-height: 1;
+}
+
+/* Two-class selectors beat .is-light span / .is-dark span !important rules in theme */
+.se-event-card__date .se-event-card__sep {
+	font-family: var( --se-font-display );
+	font-size: 20px;
+	font-weight: 700;
+	line-height: 1;
+	color: #ffffff !important;
+	padding-top: 4px;
+}
+
+.se-event-card__date .se-event-card__day {
+	font-family: var( --se-font-display );
+	font-size: 52px;
+	font-weight: 700;
+	line-height: 1;
+	color: #ffffff !important;
+}
+
+.se-event-card__date .se-event-card__day--small {
+	font-size: 28px;
+	color: #ffffff !important;
+}
+
+.se-event-card__date .se-event-card__month {
+	font-family: var( --se-font-display );
+	font-size: 28px;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	margin-top: 2px;
+	color: #ffffff !important;
+	line-height: 1;
+}
+
+.se-event-card__date .se-event-card__date-end-col .se-event-card__month {
+	font-size: 12px;
+	letter-spacing: 0.1em;
+	margin-top: 3px;
+}
+
+
+/* Card body
+--------------------------------------------- */
+
+.se-event-card__body {
+	padding: 16px 20px 20px;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+}
+
+.se-event-card__body .se-event-card__title {
+	flex: 1; /* pushes location/category to bottom */
+}
+
+.se-event-card__body .se-event-card__title {
+	font-family: var( --se-font-primary );
+	font-size: 24px;
+	font-weight: 700;
+	color: var( --client-nav-bg, #2d2d2d ) !important;
+	margin: 0 0 10px;
+	line-height: 1.2;
+	text-transform: none !important;
+}
+
+/* Stretched link — covers entire card */
+.se-event-card__title-link {
+	color: var( --client-nav-bg, #2d2d2d ) !important;
+	text-decoration: none;
+}
+
+.se-event-card__title-link::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+}
+
+.se-event-card:hover .se-event-card__title-link {
+	text-decoration: underline;
+}
+
+.se-event-card__location,
+.se-event-card__category {
+	font-family: var( --se-font-primary );
+	font-size: 12px;
+	font-weight: 700;
+	color: var( --se-text-muted );
+	margin: 0 0 2px;
+	line-height: 1.4;
+}
+
+.se-event-card__category {
+	margin-bottom: 0;
+}
+
+
+/* Empty state
+--------------------------------------------- */
+
+.se-events-empty {
+	color: var( --se-text-muted );
+	font-family: var( --se-font-primary );
+	text-align: center;
+	padding: 40px 0;
+	grid-column: 1 / -1;
+}
+
+
+/* Mobile header stack
+--------------------------------------------- */
+
+@media ( max-width: 600px ) {
+
+
+	.se-events-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 16px;
+	}
+
+	.se-events-filter {
+		gap: 16px;
+	}
+
+	.se-events-cta {
+		align-self: flex-start;
+	}
+
+}
