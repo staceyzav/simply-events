@@ -156,7 +156,7 @@ function simply_events_shortcode( $atts ) {
 				$end_day      = $end_ts ? date( 'd', $end_ts ) : '';
 				$end_month    = $end_ts ? date( 'M', $end_ts ) : '';
 				?>
-				<article class="se-event-card" data-cats="<?php echo esc_attr( $cat_slugs ); ?>">
+				<article class="se-event-card ss-card" data-cats="<?php echo esc_attr( $cat_slugs ); ?>">
 
 					<div class="se-event-card__date">
 						<div class="se-event-card__date-start">
@@ -174,7 +174,7 @@ function simply_events_shortcode( $atts ) {
 						<?php endif; ?>
 					</div>
 
-					<div class="se-event-card__body">
+					<div class="se-event-card__body ss-card-body">
 						<h3 class="se-event-card__title">
 							<a href="<?php echo esc_url( get_permalink() ); ?>" class="se-event-card__title-link"><?php the_title(); ?></a>
 						</h3>

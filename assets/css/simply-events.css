@@ -20,11 +20,9 @@
 	--se-accent-text:  var( --client-accent-text,        #ffffff );
 	--se-heading:      var( --client-heading,            #2d2d2d );
 	--se-bg:           var( --client-section-light-bg,   #f2f2f2 );
-	--se-card-bg:      #ffffff;
 	--se-text-muted:   #888888;
 	--se-font-display: var( --client-font-display,       Arial, sans-serif );
 	--se-font-primary: var( --client-font-primary,       Arial, sans-serif );
-	--se-radius:       8px;
 	--se-gap:          16px;
 }
 
@@ -101,7 +99,7 @@
 /* CTA button */
 .se-events-cta {
 	border: 2px solid var( --client-nav-bg, #2d2d2d ) !important;
-	border-radius: 100px !important;
+	border-radius: 0 !important;
 	color: var( --client-nav-bg, #2d2d2d ) !important;
 	background: none !important;
 	background-color: transparent !important;
@@ -146,26 +144,14 @@
 }
 
 
-/* Event card
+/* Event card — base visual (bg, radius, shadow, overflow, hover) from .ss-card
 --------------------------------------------- */
 
 .se-event-card {
-	background: var( --se-card-bg );
-	border-radius: var( --se-radius );
-	overflow: hidden;
-	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.08 );
-	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	position: relative;
 	display: flex;
 	flex-direction: column;
-}
-
-.se-event-card:hover {
-	transform: translateY( -3px );
-	box-shadow: 0 6px 20px rgba( 0, 0, 0, 0.12 );
-}
-
-.se-event-card {
-	transition: opacity 0.25s ease, transform 0.25s ease;
+	transition: opacity 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .se-event-card.is-hiding {
