@@ -1,6 +1,16 @@
 # Simply Events — Changelog
 https://simplydesign.com/simply-events
 
+## [1.2.0] — 2026-06-09
+
+### Added
+- Single event template (`templates/single-event.php`) — 2-column header (1:1 image left, content right: title h1, start/end dates, location, PDF download), then post content below
+- Single event CSS (`assets/css/simply-events-single.css`) — enqueued only on single event pages; inherits `--client-*` tokens for heading, font, accent, radius
+- "Event Header" sidebar meta box on event edit screen — "Remove event header" checkbox lets user skip the auto-generated header and build the page from scratch in the block editor
+- Mobile: single-column stacked layout at ≤767px
+
+---
+
 ## [1.0.2] — 2026-06-02
 
 ### Fixed

@@ -66,7 +66,8 @@ function simply_events_register_cpt() {
 
 // ==========================================================================
 // META BOX — Event Details
-// Fields: start date, end date, location, PDF
+// Fields: start date, end date, location, location URL, location logo, PDF,
+//         CTA URL, CTA text.
 // Featured image handles the photo (registered via 'thumbnail' support above).
 // ==========================================================================
 
@@ -86,10 +87,15 @@ function simply_events_add_meta_box() {
 function simply_events_meta_box_cb( $post ) {
 	wp_nonce_field( 'simply_events_save_meta', 'simply_events_nonce' );
 
-	$start    = get_post_meta( $post->ID, '_event_start_date', true );
-	$end      = get_post_meta( $post->ID, '_event_end_date', true );
-	$location = get_post_meta( $post->ID, '_event_location', true );
-	$pdf      = get_post_meta( $post->ID, '_event_pdf', true );
+	$start        = get_post_meta( $post->ID, '_event_start_date',    true );
+	$end          = get_post_meta( $post->ID, '_event_end_date',      true );
+	$location     = get_post_meta( $post->ID, '_event_location',      true );
+	$location_url = get_post_meta( $post->ID, '_event_location_url',  true );
+	$location_logo= get_post_meta( $post->ID, '_event_location_logo', true );
+	$pdf          = get_post_meta( $post->ID, '_event_pdf',           true );
+	$pdf_label    = get_post_meta( $post->ID, '_event_pdf_label',     true );
+	$cta_url      = get_post_meta( $post->ID, '_event_cta_url',       true );
+	$cta_text     = get_post_meta( $post->ID, '_event_cta_text',      true );
 	?>
 	<style>
 		.se-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
@@ -98,10 +104,13 @@ function simply_events_meta_box_cb( $post ) {
 		.se-meta-field input[type="date"],
 		.se-meta-field input[type="text"],
 		.se-meta-field input[type="url"] { width: 100%; padding: 6px 8px; border: 1px solid #ddd; border-radius: 3px; font-size: 13px; }
-		.se-meta-pdf-row { display: flex; gap: 8px; align-items: center; }
-		.se-meta-pdf-row input { flex: 1; }
+		.se-meta-upload-row { display: flex; gap: 8px; align-items: center; }
+		.se-meta-upload-row input { flex: 1; }
+		.se-meta-note { font-weight: 400; color: #888; font-size: 11px; display: block; margin-top: 2px; }
+		.se-meta-divider { grid-column: 1 / -1; border: none; border-top: 1px solid #eee; margin: 4px 0; }
 	</style>
 	<div class="se-meta-grid">
+
 		<div class="se-meta-field">
 			<label for="event_start_date"><?php esc_html_e( 'Start Date', 'simply-events' ); ?> <span style="color:red">*</span></label>
 			<input type="date" id="event_start_date" name="event_start_date" value="<?php echo esc_attr( $start ); ?>">
@@ -110,17 +119,52 @@ function simply_events_meta_box_cb( $post ) {
 			<label for="event_end_date"><?php esc_html_e( 'End Date', 'simply-events' ); ?> <em style="font-weight:400;color:#888">(optional)</em></label>
 			<input type="date" id="event_end_date" name="event_end_date" value="<?php echo esc_attr( $end ); ?>">
 		</div>
+
+		<hr class="se-meta-divider">
+
 		<div class="se-meta-field se-meta-full">
 			<label for="event_location"><?php esc_html_e( 'Location', 'simply-events' ); ?></label>
 			<input type="text" id="event_location" name="event_location" value="<?php echo esc_attr( $location ); ?>" placeholder="e.g. Snowbird Resort">
 		</div>
-		<div class="se-meta-field se-meta-full">
+		<div class="se-meta-field">
+			<label for="event_location_url"><?php esc_html_e( 'Location URL', 'simply-events' ); ?></label>
+			<span class="se-meta-note"><?php esc_html_e( 'Map or website', 'simply-events' ); ?></span>
+			<input type="url" id="event_location_url" name="event_location_url" value="<?php echo esc_attr( $location_url ); ?>" placeholder="https://...">
+		</div>
+		<div class="se-meta-field">
+			<label><?php esc_html_e( 'Location Logo', 'simply-events' ); ?></label>
+			<span class="se-meta-note"><?php esc_html_e( 'Optional image', 'simply-events' ); ?></span>
+			<div class="se-meta-upload-row">
+				<input type="url" id="event_location_logo" name="event_location_logo" value="<?php echo esc_attr( $location_logo ); ?>" placeholder="https://...">
+				<button type="button" class="button" id="se-logo-upload"><?php esc_html_e( 'Choose', 'simply-events' ); ?></button>
+			</div>
+		</div>
+
+		<hr class="se-meta-divider">
+
+		<div class="se-meta-field">
 			<label for="event_pdf"><?php esc_html_e( 'PDF', 'simply-events' ); ?> <em style="font-weight:400;color:#888">(optional)</em></label>
-			<div class="se-meta-pdf-row">
+			<div class="se-meta-upload-row">
 				<input type="url" id="event_pdf" name="event_pdf" value="<?php echo esc_attr( $pdf ); ?>" placeholder="https://...">
 				<button type="button" class="button" id="se-pdf-upload"><?php esc_html_e( 'Choose File', 'simply-events' ); ?></button>
 			</div>
 		</div>
+		<div class="se-meta-field">
+			<label for="event_pdf_label"><?php esc_html_e( 'PDF Label', 'simply-events' ); ?></label>
+			<span class="se-meta-note"><?php esc_html_e( 'Button text', 'simply-events' ); ?></span>
+			<input type="text" id="event_pdf_label" name="event_pdf_label" value="<?php echo esc_attr( $pdf_label ); ?>" placeholder="e.g. Download Schedule">
+		</div>
+		<div class="se-meta-field">
+			<label for="event_cta_text"><?php esc_html_e( 'CTA Text', 'simply-events' ); ?></label>
+			<span class="se-meta-note"><?php esc_html_e( 'Button label', 'simply-events' ); ?></span>
+			<input type="text" id="event_cta_text" name="event_cta_text" value="<?php echo esc_attr( $cta_text ); ?>" placeholder="e.g. Register Now">
+		</div>
+		<div class="se-meta-field">
+			<label for="event_cta_url"><?php esc_html_e( 'CTA URL', 'simply-events' ); ?></label>
+			<span class="se-meta-note"><?php esc_html_e( 'Link to PDF or website', 'simply-events' ); ?></span>
+			<input type="url" id="event_cta_url" name="event_cta_url" value="<?php echo esc_attr( $cta_url ); ?>" placeholder="https://...">
+		</div>
+
 	</div>
 	<script>
 	jQuery(function($){
@@ -128,8 +172,15 @@ function simply_events_meta_box_cb( $post ) {
 			e.preventDefault();
 			var frame = wp.media({ title: 'Select PDF', button: { text: 'Use this file' }, multiple: false });
 			frame.on('select', function(){
-				var attachment = frame.state().get('selection').first().toJSON();
-				$('#event_pdf').val(attachment.url);
+				$('#event_pdf').val( frame.state().get('selection').first().toJSON().url );
+			});
+			frame.open();
+		});
+		$('#se-logo-upload').on('click', function(e){
+			e.preventDefault();
+			var frame = wp.media({ title: 'Select Location Logo', button: { text: 'Use this image' }, multiple: false, library: { type: 'image' } });
+			frame.on('select', function(){
+				$('#event_location_logo').val( frame.state().get('selection').first().toJSON().url );
 			});
 			frame.open();
 		});
@@ -150,18 +201,78 @@ function simply_events_save_meta( $post_id ) {
 		return;
 	}
 
-	if ( isset( $_POST['event_start_date'] ) ) {
-		update_post_meta( $post_id, '_event_start_date', sanitize_text_field( $_POST['event_start_date'] ) );
+	$fields = array(
+		'event_start_date'    => array( 'key' => '_event_start_date',    'fn' => 'sanitize_text_field' ),
+		'event_end_date'      => array( 'key' => '_event_end_date',      'fn' => 'sanitize_text_field' ),
+		'event_location'      => array( 'key' => '_event_location',      'fn' => 'sanitize_text_field' ),
+		'event_location_url'  => array( 'key' => '_event_location_url',  'fn' => 'esc_url_raw' ),
+		'event_location_logo' => array( 'key' => '_event_location_logo', 'fn' => 'esc_url_raw' ),
+		'event_pdf'           => array( 'key' => '_event_pdf',           'fn' => 'esc_url_raw' ),
+		'event_pdf_label'     => array( 'key' => '_event_pdf_label',     'fn' => 'sanitize_text_field' ),
+		'event_cta_url'       => array( 'key' => '_event_cta_url',       'fn' => 'esc_url_raw' ),
+		'event_cta_text'      => array( 'key' => '_event_cta_text',      'fn' => 'sanitize_text_field' ),
+	);
+
+	foreach ( $fields as $post_key => $field ) {
+		if ( isset( $_POST[ $post_key ] ) ) {
+			update_post_meta( $post_id, $field['key'], call_user_func( $field['fn'], $_POST[ $post_key ] ) );
+		}
 	}
-	if ( isset( $_POST['event_end_date'] ) ) {
-		update_post_meta( $post_id, '_event_end_date', sanitize_text_field( $_POST['event_end_date'] ) );
+}
+
+
+// ==========================================================================
+// META BOX — Event Header toggle (sidebar)
+// Checkbox: remove the auto-generated header (field data + image).
+// When checked, the single-event template skips the header so the user
+// can build the page entirely from post content / blocks.
+// ==========================================================================
+
+add_action( 'add_meta_boxes', 'simply_events_add_header_box' );
+
+function simply_events_add_header_box() {
+	add_meta_box(
+		'simply_event_header_toggle',
+		__( 'Event Header', 'simply-events' ),
+		'simply_events_header_box_cb',
+		'simply_event',
+		'side',
+		'default'
+	);
+}
+
+function simply_events_header_box_cb( $post ) {
+	wp_nonce_field( 'simply_events_header_toggle', 'simply_events_header_nonce' );
+	$remove = get_post_meta( $post->ID, '_event_remove_header', true );
+	?>
+	<label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;line-height:1.4;">
+		<input type="checkbox" name="event_remove_header" value="1"
+			<?php checked( $remove, '1' ); ?>
+			style="margin-top:3px;flex-shrink:0;">
+		<span>
+			<strong><?php esc_html_e( 'Remove event header', 'simply-events' ); ?></strong><br>
+			<span style="font-size:11px;color:#666;">
+				<?php esc_html_e( 'This contains field data and image. Remove to build the page from scratch.', 'simply-events' ); ?>
+			</span>
+		</span>
+	</label>
+	<?php
+}
+
+add_action( 'save_post_simply_event', 'simply_events_save_header_toggle', 10, 1 );
+
+function simply_events_save_header_toggle( $post_id ) {
+	if (
+		! isset( $_POST['simply_events_header_nonce'] ) ||
+		! wp_verify_nonce( $_POST['simply_events_header_nonce'], 'simply_events_header_toggle' ) ||
+		( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) ||
+		! current_user_can( 'edit_post', $post_id )
+	) {
+		return;
 	}
-	if ( isset( $_POST['event_location'] ) ) {
-		update_post_meta( $post_id, '_event_location', sanitize_text_field( $_POST['event_location'] ) );
-	}
-	if ( isset( $_POST['event_pdf'] ) ) {
-		update_post_meta( $post_id, '_event_pdf', esc_url_raw( $_POST['event_pdf'] ) );
-	}
+
+	$remove = isset( $_POST['event_remove_header'] ) ? '1' : '';
+	update_post_meta( $post_id, '_event_remove_header', $remove );
 }
 
 
