@@ -28,12 +28,16 @@ function simply_events_enqueue() {
 // SHORTCODE — [simply_events]
 //
 // Attributes:
-//   title      Section heading. Default: "Upcoming Events"
-//   limit      Max events to show. Default: 5
+//   title       Section heading. Default: "Upcoming Events"
+//   limit       Max events to show. Default: 5
 //   show_filter Show category filter tabs. Default: true
-//   cta_text   CTA button label. Default: "View Full Schedule"
-//   cta_url    CTA button URL. Default: /events
-//   category   Slug — pre-filter to a specific category. Default: all
+//   cta_text    CTA button label. Default: "View Full Schedule"
+//   cta_url     CTA button URL. Default: /events
+//   category    Slug — pre-filter to a specific category. Default: all
+//   show_future Include upcoming events (start date >= today). Default: true
+//   show_past   Include past events (start date < today). Default: false
+//   order       Sort by start date: ASC (soonest first) or DESC (latest first). Default: ASC
+//   view        Display mode: grid or list. Default: grid
 // ==========================================================================
 
 add_shortcode( 'simply_events', 'simply_events_shortcode' );
@@ -44,26 +48,43 @@ function simply_events_shortcode( $atts ) {
 		'title'       => __( 'Upcoming Events', 'simply-events' ),
 		'limit'       => 5,
 		'show_filter' => 'true',
-		'cta_text'    => __( 'View Full Schedule', 'simply-events' ),
-		'cta_url'     => '/events',
+		'cta_text'    => '',
+		'cta_url'     => '',
 		'category'    => '',
+		'show_future' => 'true',
+		'show_past'   => 'false',
+		'order'       => 'ASC',
+		'view'        => 'grid',
 	), $atts, 'simply_events' );
 
 	$limit       = absint( $atts['limit'] );
 	$show_filter = filter_var( $atts['show_filter'], FILTER_VALIDATE_BOOLEAN );
+	$show_future = filter_var( $atts['show_future'], FILTER_VALIDATE_BOOLEAN );
+	$show_past   = filter_var( $atts['show_past'],   FILTER_VALIDATE_BOOLEAN );
+	$order       = strtoupper( $atts['order'] ) === 'DESC' ? 'DESC' : 'ASC';
+	$view        = $atts['view'] === 'list' ? 'list' : 'grid';
 	$title       = esc_html( $atts['title'] );
 	$cta_text    = esc_html( $atts['cta_text'] );
 	$cta_url     = esc_url( $atts['cta_url'] );
 
-	// Query upcoming events ordered by start date
-	$meta_query = array(
-		array(
+	// Build date meta_query based on show_future / show_past
+	$meta_query = array();
+	if ( $show_future && ! $show_past ) {
+		$meta_query[] = array(
 			'key'     => '_event_start_date',
 			'value'   => current_time( 'Y-m-d' ),
 			'compare' => '>=',
 			'type'    => 'DATE',
-		),
-	);
+		);
+	} elseif ( $show_past && ! $show_future ) {
+		$meta_query[] = array(
+			'key'     => '_event_start_date',
+			'value'   => current_time( 'Y-m-d' ),
+			'compare' => '<',
+			'type'    => 'DATE',
+		);
+	}
+	// Both true or both false → no date restriction
 
 	$tax_query = array();
 	if ( ! empty( $atts['category'] ) ) {
@@ -79,9 +100,12 @@ function simply_events_shortcode( $atts ) {
 		'posts_per_page' => $limit,
 		'meta_key'       => '_event_start_date',
 		'orderby'        => 'meta_value',
-		'order'          => 'ASC',
-		'meta_query'     => $meta_query,
+		'order'          => $order,
 	);
+
+	if ( ! empty( $meta_query ) ) {
+		$query_args['meta_query'] = $meta_query;
+	}
 
 	if ( ! empty( $tax_query ) ) {
 		$query_args['tax_query'] = $tax_query;
@@ -126,7 +150,7 @@ function simply_events_shortcode( $atts ) {
 		</div>
 
 		<?php if ( $events->have_posts() ) : ?>
-		<div class="se-events-grid">
+		<div class="se-events-<?php echo $view; ?>"><?php // phpcs:ignore ?>
 			<?php while ( $events->have_posts() ) : $events->the_post(); ?>
 				<?php
 				$post_id  = get_the_ID();
@@ -153,6 +177,7 @@ function simply_events_shortcode( $atts ) {
 				$end_ts       = ( $end && $end !== $start ) ? strtotime( $end ) : false;
 				$start_day    = $start_ts ? date( 'd', $start_ts ) : '';
 				$start_month  = $start_ts ? date( 'M', $start_ts ) : '';
+				$start_year   = $start_ts ? date( 'Y', $start_ts ) : '';
 				$end_day      = $end_ts ? date( 'd', $end_ts ) : '';
 				$end_month    = $end_ts ? date( 'M', $end_ts ) : '';
 				?>
@@ -171,6 +196,9 @@ function simply_events_shortcode( $atts ) {
 								<span class="se-event-card__month"><?php echo esc_html( strtoupper( $end_month ) ); ?></span>
 							</div>
 						</div>
+						<?php endif; ?>
+						<?php if ( $start_year ) : ?>
+						<span class="se-event-card__year"><?php echo esc_html( $start_year ); ?></span>
 						<?php endif; ?>
 					</div>
 
