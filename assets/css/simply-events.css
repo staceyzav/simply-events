@@ -168,7 +168,8 @@
 	transform: scale( 0.96 );
 }
 
-.se-event-card.is-hidden {
+.se-event-card.is-hidden,
+.se-events-list .se-event-card.is-hidden {
 	display: none;
 }
 
