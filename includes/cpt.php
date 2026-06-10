@@ -177,7 +177,7 @@ function simply_events_meta_box_cb( $post ) {
 		</div>
 		<div class="se-meta-field">
 			<label for="event_photographer"><?php esc_html_e( 'Photographer', 'simply-events' ); ?></label>
-			<input type="text" id="event_photographer" name="event_photographer" value="<?php echo esc_attr( $photographer ); ?>" placeholder="e.g. Michael Ritucci">
+			<input type="text" id="event_photographer" name="event_photographer" value="<?php echo esc_attr( $photographer ); ?>" placeholder="e.g. Stacey Zav">
 		</div>
 		<div class="se-meta-field se-meta-full">
 			<label for="event_competition"><?php esc_html_e( 'Competition', 'simply-events' ); ?></label>
