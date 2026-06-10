@@ -5,7 +5,7 @@
  * Description: Events CPT with date range, location, PDF, photo, and category taxonomy. Upcoming events feed via [simply_events] shortcode. WP repo candidate — zero dependencies.
  * Author:      Simply Design
  * Author URI:  https://simplydesign.com
- * Version:     1.3.3
+ * Version:     1.3.4
  * License:     GPL-2.0-or-later
  * Text Domain: simply-events
  * Requires at least: 5.4
@@ -14,9 +14,12 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'SIMPLY_EVENTS_VERSION', '1.3.3' );
+define( 'SIMPLY_EVENTS_VERSION', '1.3.4' );
 define( 'SIMPLY_EVENTS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'SIMPLY_EVENTS_URL',  plugin_dir_url( __FILE__ ) );
+
+require_once SIMPLY_EVENTS_PATH . 'includes/class-github-updater.php';
+new Simply_GitHub_Updater( 'plugin', plugin_basename( __FILE__ ), 'staceyzav/simply-events', SIMPLY_EVENTS_VERSION );
 
 require_once SIMPLY_EVENTS_PATH . 'includes/cpt.php';
 require_once SIMPLY_EVENTS_PATH . 'includes/shortcode.php';
