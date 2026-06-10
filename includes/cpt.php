@@ -96,9 +96,13 @@ function simply_events_meta_box_cb( $post ) {
 	$pdf_label    = get_post_meta( $post->ID, '_event_pdf_label',     true );
 	$cta_url      = get_post_meta( $post->ID, '_event_cta_url',       true );
 	$cta_text     = get_post_meta( $post->ID, '_event_cta_text',      true );
-	$athlete      = get_post_meta( $post->ID, '_event_athlete',       true );
-	$photographer = get_post_meta( $post->ID, '_event_photographer',  true );
-	$competition  = get_post_meta( $post->ID, '_event_competition',   true );
+	$credit = array();
+	for ( $i = 1; $i <= 3; $i++ ) {
+		$credit[ $i ] = array(
+			'label' => get_post_meta( $post->ID, "_event_credit_label_{$i}", true ),
+			'value' => get_post_meta( $post->ID, "_event_credit_value_{$i}", true ),
+		);
+	}
 	?>
 	<style>
 		.se-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
@@ -169,20 +173,15 @@ function simply_events_meta_box_cb( $post ) {
 		</div>
 
 		<hr class="se-meta-divider">
-		<div class="se-meta-full" style="font-weight:600;font-size:13px;margin-bottom:4px;"><?php esc_html_e( 'Photo Credits', 'simply-events' ); ?> <em style="font-weight:400;color:#888"><?php esc_html_e( '(optional — shown on single event page)', 'simply-events' ); ?></em></div>
+		<div class="se-meta-full" style="font-weight:600;font-size:13px;margin-bottom:0;"><?php esc_html_e( 'Image Credits', 'simply-events' ); ?> <em style="font-weight:400;color:#888"><?php esc_html_e( '(optional — overlaid on photo)', 'simply-events' ); ?></em></div>
+		<div class="se-meta-full" style="display:grid;grid-template-columns:1fr 2fr;gap:8px;font-size:12px;color:#888;margin-bottom:-8px;"><span><?php esc_html_e( 'Label', 'simply-events' ); ?></span><span><?php esc_html_e( 'Value', 'simply-events' ); ?></span></div>
 
-		<div class="se-meta-field">
-			<label for="event_athlete"><?php esc_html_e( 'Athlete', 'simply-events' ); ?></label>
-			<input type="text" id="event_athlete" name="event_athlete" value="<?php echo esc_attr( $athlete ); ?>" placeholder="e.g. Jaxson Smith">
+		<?php for ( $i = 1; $i <= 3; $i++ ) : ?>
+		<div class="se-meta-full" style="display:grid;grid-template-columns:1fr 2fr;gap:8px;">
+			<input type="text" name="event_credit_label_<?php echo $i; ?>" value="<?php echo esc_attr( $credit[ $i ]['label'] ); ?>" placeholder="<?php echo esc_attr( $i === 1 ? __( 'e.g. Athlete', 'simply-events' ) : ( $i === 2 ? __( 'e.g. Photographer', 'simply-events' ) : __( 'e.g. Competition', 'simply-events' ) ) ); ?>">
+			<input type="text" name="event_credit_value_<?php echo $i; ?>" value="<?php echo esc_attr( $credit[ $i ]['value'] ); ?>" placeholder="<?php echo esc_attr( $i === 1 ? __( 'e.g. Jaxson Smith', 'simply-events' ) : ( $i === 2 ? __( 'e.g. Stacey Zav', 'simply-events' ) : __( 'e.g. IMF Snowbird 2026', 'simply-events' ) ) ); ?>">
 		</div>
-		<div class="se-meta-field">
-			<label for="event_photographer"><?php esc_html_e( 'Photographer', 'simply-events' ); ?></label>
-			<input type="text" id="event_photographer" name="event_photographer" value="<?php echo esc_attr( $photographer ); ?>" placeholder="e.g. Stacey Zav">
-		</div>
-		<div class="se-meta-field se-meta-full">
-			<label for="event_competition"><?php esc_html_e( 'Competition', 'simply-events' ); ?></label>
-			<input type="text" id="event_competition" name="event_competition" value="<?php echo esc_attr( $competition ); ?>" placeholder="e.g. IMF Snowbird 2026">
-		</div>
+		<?php endfor; ?>
 
 	</div>
 	<script>
@@ -230,9 +229,6 @@ function simply_events_save_meta( $post_id ) {
 		'event_pdf_label'     => array( 'key' => '_event_pdf_label',     'fn' => 'sanitize_text_field' ),
 		'event_cta_url'       => array( 'key' => '_event_cta_url',       'fn' => 'esc_url_raw' ),
 		'event_cta_text'      => array( 'key' => '_event_cta_text',      'fn' => 'sanitize_text_field' ),
-		'event_athlete'       => array( 'key' => '_event_athlete',       'fn' => 'sanitize_text_field' ),
-		'event_photographer'  => array( 'key' => '_event_photographer',  'fn' => 'sanitize_text_field' ),
-		'event_competition'   => array( 'key' => '_event_competition',   'fn' => 'sanitize_text_field' ),
 	);
 
 	foreach ( $fields as $post_key => $field ) {
@@ -240,6 +236,18 @@ function simply_events_save_meta( $post_id ) {
 			update_post_meta( $post_id, $field['key'], call_user_func( $field['fn'], $_POST[ $post_key ] ) );
 		}
 	}
+
+	for ( $i = 1; $i <= 3; $i++ ) {
+		$label_key = "event_credit_label_{$i}";
+		$value_key = "event_credit_value_{$i}";
+		if ( isset( $_POST[ $label_key ] ) ) {
+			update_post_meta( $post_id, "_event_credit_label_{$i}", sanitize_text_field( $_POST[ $label_key ] ) );
+		}
+		if ( isset( $_POST[ $value_key ] ) ) {
+			update_post_meta( $post_id, "_event_credit_value_{$i}", sanitize_text_field( $_POST[ $value_key ] ) );
+		}
+	}
+
 }
 
 
