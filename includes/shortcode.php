@@ -59,7 +59,7 @@ function simply_events_shortcode( $atts ) {
 	), $atts, 'simply_events' );
 
 	$limit       = absint( $atts['limit'] );
-	$show_filter = filter_var( $atts['show_filter'], FILTER_VALIDATE_BOOLEAN );
+	$show_filter = filter_var( $atts['show_filter'], FILTER_VALIDATE_BOOLEAN ) && empty( $atts['category'] );
 	$show_future = filter_var( $atts['show_future'], FILTER_VALIDATE_BOOLEAN );
 	$show_past   = filter_var( $atts['show_past'],   FILTER_VALIDATE_BOOLEAN );
 	$order       = strtoupper( $atts['order'] ) === 'DESC' ? 'DESC' : 'ASC';
