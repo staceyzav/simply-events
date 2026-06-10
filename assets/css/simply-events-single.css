@@ -110,6 +110,25 @@
 	width: 100%;
 }
 
+/* --- Related events section ----------------------------------------------- */
+
+.se-single-related {
+	width: 100%;
+}
+
+.se-single-related__inner {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 60px 40px;
+}
+
+@media ( max-width: 767px ) {
+	.se-single-related__inner {
+		padding: 48px 24px;
+	}
+}
+
+
 /* --- Mobile: single column ------------------------------------------------ */
 
 @media ( max-width: 767px ) {

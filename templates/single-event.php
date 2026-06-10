@@ -115,6 +115,12 @@ if ( have_posts() ) :
 		<?php the_content(); ?>
 	</div>
 
+	<div class="se-single-related is-dark">
+		<div class="se-single-related__inner">
+			<?php echo do_shortcode( '[simply_events title="' . esc_attr__( 'More Events', 'simply-events' ) . '" limit="4" show_filter="false" exclude="' . $post_id . '"]' ); ?>
+		</div>
+	</div>
+
 <?php
 endif; // have_posts
 

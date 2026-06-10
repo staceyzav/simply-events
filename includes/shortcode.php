@@ -55,6 +55,7 @@ function simply_events_shortcode( $atts ) {
 		'show_past'   => 'false',
 		'order'       => 'ASC',
 		'view'        => 'grid',
+		'exclude'     => 0,
 	), $atts, 'simply_events' );
 
 	$limit       = absint( $atts['limit'] );
@@ -95,6 +96,8 @@ function simply_events_shortcode( $atts ) {
 		);
 	}
 
+	$exclude = absint( $atts['exclude'] );
+
 	$query_args = array(
 		'post_type'      => 'simply_event',
 		'posts_per_page' => $limit,
@@ -102,6 +105,10 @@ function simply_events_shortcode( $atts ) {
 		'orderby'        => 'meta_value',
 		'order'          => $order,
 	);
+
+	if ( $exclude ) {
+		$query_args['post__not_in'] = array( $exclude );
+	}
 
 	if ( ! empty( $meta_query ) ) {
 		$query_args['meta_query'] = $meta_query;
