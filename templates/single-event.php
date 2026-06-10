@@ -21,6 +21,9 @@ if ( have_posts() ) :
 	$pdf_label     = get_post_meta( $post_id, '_event_pdf_label',      true );
 	$cta_url       = get_post_meta( $post_id, '_event_cta_url',        true );
 	$cta_text      = get_post_meta( $post_id, '_event_cta_text',       true );
+	$athlete       = get_post_meta( $post_id, '_event_athlete',        true );
+	$photographer  = get_post_meta( $post_id, '_event_photographer',   true );
+	$competition   = get_post_meta( $post_id, '_event_competition',    true );
 	$start_fmt     = $start ? date_i18n( 'F j, Y', strtotime( $start ) ) : '';
 	$end_fmt       = ( $end && $end !== $start ) ? date_i18n( 'F j, Y', strtotime( $end ) ) : '';
 
@@ -34,6 +37,19 @@ if ( have_posts() ) :
 
 			<div class="se-single-header__image">
 				<?php the_post_thumbnail( 'large', array( 'alt' => get_the_title() ) ); ?>
+				<?php if ( $athlete || $photographer || $competition ) : ?>
+				<div class="se-single-header__credit">
+					<?php if ( $athlete ) : ?>
+					<div><strong><?php esc_html_e( 'Athlete:', 'simply-events' ); ?></strong> <?php echo esc_html( $athlete ); ?></div>
+					<?php endif; ?>
+					<?php if ( $photographer ) : ?>
+					<div><strong><?php esc_html_e( 'Photographer:', 'simply-events' ); ?></strong> <?php echo esc_html( $photographer ); ?></div>
+					<?php endif; ?>
+					<?php if ( $competition ) : ?>
+					<div><strong><?php esc_html_e( 'Competition:', 'simply-events' ); ?></strong> <?php echo esc_html( $competition ); ?></div>
+					<?php endif; ?>
+				</div>
+				<?php endif; ?>
 			</div>
 
 			<div class="se-single-header__content">

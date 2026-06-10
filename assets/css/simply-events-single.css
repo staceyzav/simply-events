@@ -11,9 +11,27 @@
 
 /* Left column: square image */
 .se-single-header__image {
+	position: relative;
 	aspect-ratio: 4 / 3;
 	align-self: start;
 	overflow: hidden;
+}
+
+/* Photo credit — overlaid bottom-left of image */
+.se-single-header__credit {
+	position: absolute;
+	bottom: 16px;
+	left: 16px;
+	font-size: 12px;
+	line-height: 1.7;
+	color: var(--client-heading, #1a1a1a);
+}
+
+.se-single-header__credit strong {
+	font-weight: 600;
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
 }
 
 .se-single-header__image img {
@@ -102,6 +120,7 @@
 
 	.se-single-header__image {
 		aspect-ratio: 4 / 3;
+		clip-path: none;
 	}
 
 	.se-single-header__content {

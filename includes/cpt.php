@@ -96,6 +96,9 @@ function simply_events_meta_box_cb( $post ) {
 	$pdf_label    = get_post_meta( $post->ID, '_event_pdf_label',     true );
 	$cta_url      = get_post_meta( $post->ID, '_event_cta_url',       true );
 	$cta_text     = get_post_meta( $post->ID, '_event_cta_text',      true );
+	$athlete      = get_post_meta( $post->ID, '_event_athlete',       true );
+	$photographer = get_post_meta( $post->ID, '_event_photographer',  true );
+	$competition  = get_post_meta( $post->ID, '_event_competition',   true );
 	?>
 	<style>
 		.se-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
@@ -165,6 +168,22 @@ function simply_events_meta_box_cb( $post ) {
 			<input type="url" id="event_cta_url" name="event_cta_url" value="<?php echo esc_attr( $cta_url ); ?>" placeholder="https://...">
 		</div>
 
+		<hr class="se-meta-divider">
+		<div class="se-meta-full" style="font-weight:600;font-size:13px;margin-bottom:4px;"><?php esc_html_e( 'Photo Credits', 'simply-events' ); ?> <em style="font-weight:400;color:#888"><?php esc_html_e( '(optional — shown on single event page)', 'simply-events' ); ?></em></div>
+
+		<div class="se-meta-field">
+			<label for="event_athlete"><?php esc_html_e( 'Athlete', 'simply-events' ); ?></label>
+			<input type="text" id="event_athlete" name="event_athlete" value="<?php echo esc_attr( $athlete ); ?>" placeholder="e.g. Jaxson Smith">
+		</div>
+		<div class="se-meta-field">
+			<label for="event_photographer"><?php esc_html_e( 'Photographer', 'simply-events' ); ?></label>
+			<input type="text" id="event_photographer" name="event_photographer" value="<?php echo esc_attr( $photographer ); ?>" placeholder="e.g. Michael Ritucci">
+		</div>
+		<div class="se-meta-field se-meta-full">
+			<label for="event_competition"><?php esc_html_e( 'Competition', 'simply-events' ); ?></label>
+			<input type="text" id="event_competition" name="event_competition" value="<?php echo esc_attr( $competition ); ?>" placeholder="e.g. IMF Snowbird 2026">
+		</div>
+
 	</div>
 	<script>
 	jQuery(function($){
@@ -211,6 +230,9 @@ function simply_events_save_meta( $post_id ) {
 		'event_pdf_label'     => array( 'key' => '_event_pdf_label',     'fn' => 'sanitize_text_field' ),
 		'event_cta_url'       => array( 'key' => '_event_cta_url',       'fn' => 'esc_url_raw' ),
 		'event_cta_text'      => array( 'key' => '_event_cta_text',      'fn' => 'sanitize_text_field' ),
+		'event_athlete'       => array( 'key' => '_event_athlete',       'fn' => 'sanitize_text_field' ),
+		'event_photographer'  => array( 'key' => '_event_photographer',  'fn' => 'sanitize_text_field' ),
+		'event_competition'   => array( 'key' => '_event_competition',   'fn' => 'sanitize_text_field' ),
 	);
 
 	foreach ( $fields as $post_key => $field ) {
