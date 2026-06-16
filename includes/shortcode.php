@@ -133,7 +133,7 @@ function simply_events_shortcode( $atts ) {
 
 		<div class="se-events-header">
 
-			<h2 class="se-events-title"><?php echo $title; ?></h2>
+			<?php if ( $title ) : ?><h2 class="se-events-title"><?php echo $title; ?></h2><?php endif; ?>
 
 			<?php if ( $show_filter && ! is_wp_error( $categories ) && ! empty( $categories ) ) : ?>
 			<nav class="se-events-filter" aria-label="<?php esc_attr_e( 'Filter events by category', 'simply-events' ); ?>">
