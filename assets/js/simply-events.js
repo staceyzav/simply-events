@@ -63,33 +63,27 @@
 						}
 					} );
 
-					// Step 3: animate each now-visible card
+					// Step 3: FLIP-animate cards that were already visible and moved.
+					// Newly-revealed cards (wasVisible=false) just appear — no fade
+					// needed, and opacity manipulation on display:none→flex is unreliable.
 					requestAnimationFrame( function () {
 						requestAnimationFrame( function () {
 							cards.forEach( function ( card, i ) {
 								if ( card.classList.contains( 'is-hidden' ) ) return;
+								if ( ! wasVisible[ i ] ) return;
 
-								if ( ! wasVisible[ i ] ) {
-									// Was hidden — simple fade in, no movement
-									card.style.opacity    = '0';
-									card.style.transition = 'opacity 0.3s ease';
+								// Was visible — FLIP to new position
+								var newRect = card.getBoundingClientRect();
+								var dx = rects[ i ].left - newRect.left;
+								var dy = rects[ i ].top  - newRect.top;
+
+								if ( Math.abs( dx ) > 0.5 || Math.abs( dy ) > 0.5 ) {
+									card.style.transition = 'none';
+									card.style.transform  = 'translate(' + dx + 'px, ' + dy + 'px)';
 									requestAnimationFrame( function () {
-										card.style.opacity = '1';
+										card.style.transition = 'transform 0.35s ease';
+										card.style.transform  = '';
 									} );
-								} else {
-									// Was visible — FLIP to new position
-									var newRect = card.getBoundingClientRect();
-									var dx = rects[ i ].left - newRect.left;
-									var dy = rects[ i ].top  - newRect.top;
-
-									if ( Math.abs( dx ) > 0.5 || Math.abs( dy ) > 0.5 ) {
-										card.style.transition = 'none';
-										card.style.transform  = 'translate(' + dx + 'px, ' + dy + 'px)';
-										requestAnimationFrame( function () {
-											card.style.transition = 'transform 0.35s ease';
-											card.style.transform  = '';
-										} );
-									}
 								}
 							} );
 						} );
