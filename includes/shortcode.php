@@ -100,7 +100,7 @@ function simply_events_shortcode( $atts ) {
 
 	$query_args = array(
 		'post_type'      => 'simply_event',
-		'posts_per_page' => $limit,
+		'posts_per_page' => -1,
 		'meta_key'       => '_event_start_date',
 		'orderby'        => 'meta_value',
 		'order'          => $order,
@@ -129,7 +129,7 @@ function simply_events_shortcode( $atts ) {
 
 	ob_start();
 	?>
-	<div class="se-events-block">
+	<div class="se-events-block" data-limit="<?php echo esc_attr( $limit ); ?>">
 
 		<div class="se-events-header">
 

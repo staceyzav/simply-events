@@ -17,6 +17,14 @@
 
 			var filterBtns = block.querySelectorAll( '.se-filter-btn' );
 			var cards      = Array.prototype.slice.call( block.querySelectorAll( '.se-event-card' ) );
+			var limit      = parseInt( block.dataset.limit, 10 ) || 0;
+
+			// Apply limit on initial load so only the first N cards are visible.
+			if ( limit ) {
+				cards.forEach( function ( card, i ) {
+					if ( i >= limit ) card.classList.add( 'is-hidden' );
+				} );
+			}
 
 			if ( ! filterBtns.length ) return;
 
@@ -37,15 +45,19 @@
 					var rects      = cards.map( function ( c ) { return c.getBoundingClientRect(); } );
 					var wasVisible = cards.map( function ( c ) { return ! c.classList.contains( 'is-hidden' ); } );
 
-					// Step 2: apply filter instantly (no transition)
+					// Step 2: apply filter + limit instantly (no transition)
+					// All events are rendered; we show only the first `limit` that match.
+					var visibleCount = 0;
 					cards.forEach( function ( card ) {
 						card.style.transition = 'none';
 						card.style.transform  = '';
 						card.style.opacity    = '';
-						var cardCats = card.dataset.cats || '';
-						var visible  = ( cat === 'all' || cardCats.split( ' ' ).indexOf( cat ) !== -1 );
-						if ( visible ) {
+						var cardCats   = card.dataset.cats || '';
+						var matchesCat = ( cat === 'all' || cardCats.split( ' ' ).indexOf( cat ) !== -1 );
+						var withinLimit = ( ! limit || visibleCount < limit );
+						if ( matchesCat && withinLimit ) {
 							card.classList.remove( 'is-hidden' );
+							visibleCount++;
 						} else {
 							card.classList.add( 'is-hidden' );
 						}
