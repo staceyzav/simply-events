@@ -125,6 +125,7 @@ function simply_events_shortcode( $atts ) {
 		'taxonomy'   => 'simply_event_cat',
 		'hide_empty' => true,
 		'orderby'    => 'name',
+		'order'      => 'DESC',
 	) );
 
 	ob_start();
