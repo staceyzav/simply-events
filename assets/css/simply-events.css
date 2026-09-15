@@ -135,21 +135,27 @@
 --------------------------------------------- */
 
 .se-events-grid {
-	display: grid;
-	grid-template-columns: repeat( 5, 1fr );
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
 	gap: var( --se-gap );
 }
 
+.se-event-card {
+	flex: 0 0 calc( ( 100% - 4 * var( --se-gap ) ) / 5 );
+	min-width: 0;
+}
+
 @media ( max-width: 1200px ) {
-	.se-events-grid { grid-template-columns: repeat( 4, 1fr ); }
+	.se-event-card { flex: 0 0 calc( ( 100% - 3 * var( --se-gap ) ) / 4 ); }
 }
 
 @media ( max-width: 900px ) {
-	.se-events-grid { grid-template-columns: repeat( 3, 1fr ); }
+	.se-event-card { flex: 0 0 calc( ( 100% - 2 * var( --se-gap ) ) / 3 ); }
 }
 
 @media ( max-width: 600px ) {
-	.se-events-grid { grid-template-columns: repeat( 2, 1fr ); }
+	.se-event-card { flex: 0 0 calc( ( 100% - var( --se-gap ) ) / 2 ); }
 }
 
 
@@ -458,9 +464,33 @@
 		grid-template-columns: 1fr;
 	}
 	.se-events-list .se-event-card__date {
-		padding: 12px 16px;
+		padding: 12px 20px;
 	}
-	.se-events-list .se-event-card__date .se-event-card__day {
+	.se-events-list .se-event-card__body {
+		padding-left: 20px;
+	}
+	.se-events-list .se-event-card__date .se-event-card__day,
+	.se-events-list .se-event-card__date .se-event-card__day--small {
 		font-size: 24px;
+	}
+	.se-events-list .se-event-card__date .se-event-card__month,
+	.se-events-list .se-event-card__date-end .se-event-card__month {
+		font-size: 13px;
+	}
+	.se-events-list .se-event-card__date-end {
+		padding-top: 0;
+	}
+	.se-events-list .se-event-card__year {
+		left: auto;
+		right: 4px;
+		top: 50%;
+		bottom: auto;
+		transform: translateY( -50% ) rotate( -90deg );
+		background-color: transparent;
+		color: rgba( 255, 255, 255, 0.85 );
+		padding: 0;
+		border-radius: 0;
+		font-size: 14px;
+		font-weight: 700;
 	}
 }
