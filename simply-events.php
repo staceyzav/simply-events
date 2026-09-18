@@ -14,12 +14,9 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'SIMPLY_EVENTS_VERSION', '1.3.7' );
+define( 'SIMPLY_EVENTS_VERSION', '1.3.8' );
 define( 'SIMPLY_EVENTS_PATH', plugin_dir_path( __FILE__ ) );
 define( 'SIMPLY_EVENTS_URL',  plugin_dir_url( __FILE__ ) );
-
-require_once SIMPLY_EVENTS_PATH . 'includes/class-github-updater.php';
-new Simply_GitHub_Updater( 'plugin', plugin_basename( __FILE__ ), 'staceyzav/simply-events', SIMPLY_EVENTS_VERSION );
 
 require_once SIMPLY_EVENTS_PATH . 'includes/cpt.php';
 require_once SIMPLY_EVENTS_PATH . 'includes/shortcode.php';

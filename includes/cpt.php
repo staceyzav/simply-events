@@ -87,15 +87,24 @@ function simply_events_add_meta_box() {
 function simply_events_meta_box_cb( $post ) {
 	wp_nonce_field( 'simply_events_save_meta', 'simply_events_nonce' );
 
-	$start        = get_post_meta( $post->ID, '_event_start_date',    true );
-	$end          = get_post_meta( $post->ID, '_event_end_date',      true );
-	$location     = get_post_meta( $post->ID, '_event_location',      true );
-	$location_url = get_post_meta( $post->ID, '_event_location_url',  true );
-	$location_logo= get_post_meta( $post->ID, '_event_location_logo', true );
-	$pdf          = get_post_meta( $post->ID, '_event_pdf',           true );
-	$pdf_label    = get_post_meta( $post->ID, '_event_pdf_label',     true );
-	$cta_url      = get_post_meta( $post->ID, '_event_cta_url',       true );
-	$cta_text     = get_post_meta( $post->ID, '_event_cta_text',      true );
+	// Array of field names to hide — populated by client plugins via filter.
+	// e.g. add_filter( 'simply_events_hidden_fields', fn($f) => array_merge($f, ['event_pdf','event_cta']) );
+	$hidden = apply_filters( 'simply_events_hidden_fields', [] );
+	$show   = fn( $field ) => ! in_array( $field, $hidden, true );
+
+	$start            = get_post_meta( $post->ID, '_event_start_date',       true );
+	$start_time       = get_post_meta( $post->ID, '_event_start_time',       true );
+	$end              = get_post_meta( $post->ID, '_event_end_date',         true );
+	$end_time         = get_post_meta( $post->ID, '_event_end_time',         true );
+	$location         = get_post_meta( $post->ID, '_event_location',         true );
+	$location_url     = get_post_meta( $post->ID, '_event_location_url',     true );
+	$location_logo    = get_post_meta( $post->ID, '_event_location_logo',    true );
+	$pdf              = get_post_meta( $post->ID, '_event_pdf',              true );
+	$pdf_label        = get_post_meta( $post->ID, '_event_pdf_label',        true );
+	$cta_url          = get_post_meta( $post->ID, '_event_cta_url',          true );
+	$cta_text         = get_post_meta( $post->ID, '_event_cta_text',         true );
+	$featured         = get_post_meta( $post->ID, '_event_featured',         true );
+	$date_description = get_post_meta( $post->ID, '_event_date_description', true );
 	$credit = array();
 	for ( $i = 1; $i <= 3; $i++ ) {
 		$credit[ $i ] = array(
@@ -109,6 +118,7 @@ function simply_events_meta_box_cb( $post ) {
 		.se-meta-grid .se-meta-full { grid-column: 1 / -1; }
 		.se-meta-field label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 13px; }
 		.se-meta-field input[type="date"],
+		.se-meta-field input[type="time"],
 		.se-meta-field input[type="text"],
 		.se-meta-field input[type="url"] { width: 100%; padding: 6px 8px; border: 1px solid #ddd; border-radius: 3px; font-size: 13px; }
 		.se-meta-upload-row { display: flex; gap: 8px; align-items: center; }
@@ -117,6 +127,11 @@ function simply_events_meta_box_cb( $post ) {
 		.se-meta-divider { grid-column: 1 / -1; border: none; border-top: 1px solid #eee; margin: 4px 0; }
 	</style>
 	<div class="se-meta-grid">
+
+		<div class="se-meta-field se-meta-full" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f0f7ff;border:1px solid #c5d9f0;border-radius:3px;margin-bottom:4px;">
+			<input type="checkbox" id="event_featured" name="event_featured" value="1" <?php checked( $featured, '1' ); ?> style="width:18px;height:18px;margin:0;">
+			<label for="event_featured" style="margin:0;font-weight:600;font-size:13px;cursor:pointer;"><?php esc_html_e( 'Feature on home page', 'simply-events' ); ?></label>
+		</div>
 
 		<div class="se-meta-field">
 			<label for="event_start_date"><?php esc_html_e( 'Start Date', 'simply-events' ); ?> <span style="color:red">*</span></label>
@@ -127,17 +142,36 @@ function simply_events_meta_box_cb( $post ) {
 			<input type="date" id="event_end_date" name="event_end_date" value="<?php echo esc_attr( $end ); ?>">
 		</div>
 
+		<div class="se-meta-field">
+			<label for="event_start_time"><?php esc_html_e( 'Start Time', 'simply-events' ); ?> <em style="font-weight:400;color:#888">(optional)</em></label>
+			<input type="time" id="event_start_time" name="event_start_time" value="<?php echo esc_attr( $start_time ); ?>">
+		</div>
+		<div class="se-meta-field">
+			<label for="event_end_time"><?php esc_html_e( 'End Time', 'simply-events' ); ?> <em style="font-weight:400;color:#888">(optional)</em></label>
+			<input type="time" id="event_end_time" name="event_end_time" value="<?php echo esc_attr( $end_time ); ?>">
+		</div>
+
+		<div class="se-meta-field se-meta-full">
+			<label for="event_date_description"><?php esc_html_e( 'Date Description', 'simply-events' ); ?> <em style="font-weight:400;color:#888">(optional — e.g. "Fridays &amp; Saturdays through March")</em></label>
+			<input type="text" id="event_date_description" name="event_date_description" value="<?php echo esc_attr( $date_description ); ?>" placeholder="e.g. Every Friday and Saturday, December through March">
+		</div>
+
 		<hr class="se-meta-divider">
 
 		<div class="se-meta-field se-meta-full">
 			<label for="event_location"><?php esc_html_e( 'Location', 'simply-events' ); ?></label>
-			<input type="text" id="event_location" name="event_location" value="<?php echo esc_attr( $location ); ?>" placeholder="e.g. Snowbird Resort">
+			<input type="text" id="event_location" name="event_location" value="<?php echo esc_attr( $location ); ?>" placeholder="e.g. Main Lodge">
 		</div>
+
+		<?php if ( $show( 'event_location_url' ) ) : ?>
 		<div class="se-meta-field">
 			<label for="event_location_url"><?php esc_html_e( 'Location URL', 'simply-events' ); ?></label>
 			<span class="se-meta-note"><?php esc_html_e( 'Map or website', 'simply-events' ); ?></span>
 			<input type="url" id="event_location_url" name="event_location_url" value="<?php echo esc_attr( $location_url ); ?>" placeholder="https://...">
 		</div>
+		<?php endif; ?>
+
+		<?php if ( $show( 'event_location_logo' ) ) : ?>
 		<div class="se-meta-field">
 			<label><?php esc_html_e( 'Location Logo', 'simply-events' ); ?></label>
 			<span class="se-meta-note"><?php esc_html_e( 'Optional image', 'simply-events' ); ?></span>
@@ -146,9 +180,13 @@ function simply_events_meta_box_cb( $post ) {
 				<button type="button" class="button" id="se-logo-upload"><?php esc_html_e( 'Choose', 'simply-events' ); ?></button>
 			</div>
 		</div>
+		<?php endif; ?>
 
+		<?php if ( $show( 'event_pdf' ) || $show( 'event_cta' ) ) : ?>
 		<hr class="se-meta-divider">
+		<?php endif; ?>
 
+		<?php if ( $show( 'event_pdf' ) ) : ?>
 		<div class="se-meta-field">
 			<label for="event_pdf"><?php esc_html_e( 'PDF', 'simply-events' ); ?> <em style="font-weight:400;color:#888">(optional)</em></label>
 			<div class="se-meta-upload-row">
@@ -161,6 +199,9 @@ function simply_events_meta_box_cb( $post ) {
 			<span class="se-meta-note"><?php esc_html_e( 'Button text', 'simply-events' ); ?></span>
 			<input type="text" id="event_pdf_label" name="event_pdf_label" value="<?php echo esc_attr( $pdf_label ); ?>" placeholder="e.g. Download Schedule">
 		</div>
+		<?php endif; ?>
+
+		<?php if ( $show( 'event_cta' ) ) : ?>
 		<div class="se-meta-field">
 			<label for="event_cta_text"><?php esc_html_e( 'CTA Text', 'simply-events' ); ?></label>
 			<span class="se-meta-note"><?php esc_html_e( 'Button label', 'simply-events' ); ?></span>
@@ -171,21 +212,24 @@ function simply_events_meta_box_cb( $post ) {
 			<span class="se-meta-note"><?php esc_html_e( 'Link to PDF or website', 'simply-events' ); ?></span>
 			<input type="url" id="event_cta_url" name="event_cta_url" value="<?php echo esc_attr( $cta_url ); ?>" placeholder="https://...">
 		</div>
+		<?php endif; ?>
 
+		<?php if ( $show( 'event_credits' ) ) : ?>
 		<hr class="se-meta-divider">
 		<div class="se-meta-full" style="font-weight:600;font-size:13px;margin-bottom:0;"><?php esc_html_e( 'Image Credits', 'simply-events' ); ?> <em style="font-weight:400;color:#888"><?php esc_html_e( '(optional — overlaid on photo)', 'simply-events' ); ?></em></div>
 		<div class="se-meta-full" style="display:grid;grid-template-columns:1fr 2fr;gap:8px;font-size:12px;color:#888;margin-bottom:-8px;"><span><?php esc_html_e( 'Label', 'simply-events' ); ?></span><span><?php esc_html_e( 'Value', 'simply-events' ); ?></span></div>
-
 		<?php for ( $i = 1; $i <= 3; $i++ ) : ?>
 		<div class="se-meta-full" style="display:grid;grid-template-columns:1fr 2fr;gap:8px;">
 			<input type="text" name="event_credit_label_<?php echo $i; ?>" value="<?php echo esc_attr( $credit[ $i ]['label'] ); ?>" placeholder="<?php echo esc_attr( $i === 1 ? __( 'e.g. Athlete', 'simply-events' ) : ( $i === 2 ? __( 'e.g. Photographer', 'simply-events' ) : __( 'e.g. Competition', 'simply-events' ) ) ); ?>">
 			<input type="text" name="event_credit_value_<?php echo $i; ?>" value="<?php echo esc_attr( $credit[ $i ]['value'] ); ?>" placeholder="<?php echo esc_attr( $i === 1 ? __( 'e.g. Jaxson Smith', 'simply-events' ) : ( $i === 2 ? __( 'e.g. Stacey Zav', 'simply-events' ) : __( 'e.g. IMF Snowbird 2026', 'simply-events' ) ) ); ?>">
 		</div>
 		<?php endfor; ?>
+		<?php endif; ?>
 
 	</div>
 	<script>
 	jQuery(function($){
+		<?php if ( $show( 'event_pdf' ) ) : ?>
 		$('#se-pdf-upload').on('click', function(e){
 			e.preventDefault();
 			var frame = wp.media({ title: 'Select PDF', button: { text: 'Use this file' }, multiple: false });
@@ -194,6 +238,8 @@ function simply_events_meta_box_cb( $post ) {
 			});
 			frame.open();
 		});
+		<?php endif; ?>
+		<?php if ( $show( 'event_location_logo' ) ) : ?>
 		$('#se-logo-upload').on('click', function(e){
 			e.preventDefault();
 			var frame = wp.media({ title: 'Select Location Logo', button: { text: 'Use this image' }, multiple: false, library: { type: 'image' } });
@@ -202,9 +248,18 @@ function simply_events_meta_box_cb( $post ) {
 			});
 			frame.open();
 		});
+		<?php endif; ?>
 	});
 	</script>
 	<?php
+}
+
+// Normalize any date format → YYYY-MM-DD for consistent meta queries.
+function se_normalize_date( $value ) {
+	$value = sanitize_text_field( $value );
+	if ( ! $value ) return '';
+	$ts = strtotime( $value );
+	return $ts ? date( 'Y-m-d', $ts ) : $value;
 }
 
 add_action( 'save_post_simply_event', 'simply_events_save_meta' );
@@ -219,16 +274,22 @@ function simply_events_save_meta( $post_id ) {
 		return;
 	}
 
+	// Featured checkbox — unchecked = not in POST, so handle separately
+	update_post_meta( $post_id, '_event_featured', isset( $_POST['event_featured'] ) ? '1' : '0' );
+
 	$fields = array(
-		'event_start_date'    => array( 'key' => '_event_start_date',    'fn' => 'sanitize_text_field' ),
-		'event_end_date'      => array( 'key' => '_event_end_date',      'fn' => 'sanitize_text_field' ),
-		'event_location'      => array( 'key' => '_event_location',      'fn' => 'sanitize_text_field' ),
-		'event_location_url'  => array( 'key' => '_event_location_url',  'fn' => 'esc_url_raw' ),
-		'event_location_logo' => array( 'key' => '_event_location_logo', 'fn' => 'esc_url_raw' ),
-		'event_pdf'           => array( 'key' => '_event_pdf',           'fn' => 'esc_url_raw' ),
-		'event_pdf_label'     => array( 'key' => '_event_pdf_label',     'fn' => 'sanitize_text_field' ),
-		'event_cta_url'       => array( 'key' => '_event_cta_url',       'fn' => 'esc_url_raw' ),
-		'event_cta_text'      => array( 'key' => '_event_cta_text',      'fn' => 'sanitize_text_field' ),
+		'event_start_date'       => array( 'key' => '_event_start_date',       'fn' => 'se_normalize_date' ),
+		'event_start_time'       => array( 'key' => '_event_start_time',       'fn' => 'sanitize_text_field' ),
+		'event_end_date'         => array( 'key' => '_event_end_date',         'fn' => 'se_normalize_date' ),
+		'event_end_time'         => array( 'key' => '_event_end_time',         'fn' => 'sanitize_text_field' ),
+		'event_date_description' => array( 'key' => '_event_date_description', 'fn' => 'sanitize_text_field' ),
+		'event_location'         => array( 'key' => '_event_location',         'fn' => 'sanitize_text_field' ),
+		'event_location_url'     => array( 'key' => '_event_location_url',     'fn' => 'esc_url_raw' ),
+		'event_location_logo'    => array( 'key' => '_event_location_logo',    'fn' => 'esc_url_raw' ),
+		'event_pdf'              => array( 'key' => '_event_pdf',              'fn' => 'esc_url_raw' ),
+		'event_pdf_label'        => array( 'key' => '_event_pdf_label',        'fn' => 'sanitize_text_field' ),
+		'event_cta_url'          => array( 'key' => '_event_cta_url',          'fn' => 'esc_url_raw' ),
+		'event_cta_text'         => array( 'key' => '_event_cta_text',         'fn' => 'sanitize_text_field' ),
 	);
 
 	foreach ( $fields as $post_key => $field ) {

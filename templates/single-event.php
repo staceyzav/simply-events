@@ -11,16 +11,19 @@ if ( have_posts() ) :
 	the_post();
 
 	$post_id       = get_the_ID();
-	$remove_header = get_post_meta( $post_id, '_event_remove_header',  true );
-	$start         = get_post_meta( $post_id, '_event_start_date',     true );
-	$end           = get_post_meta( $post_id, '_event_end_date',       true );
-	$location      = get_post_meta( $post_id, '_event_location',       true );
-	$location_url  = get_post_meta( $post_id, '_event_location_url',   true );
-	$location_logo = get_post_meta( $post_id, '_event_location_logo',  true );
-	$pdf           = get_post_meta( $post_id, '_event_pdf',            true );
-	$pdf_label     = get_post_meta( $post_id, '_event_pdf_label',      true );
-	$cta_url       = get_post_meta( $post_id, '_event_cta_url',        true );
-	$cta_text      = get_post_meta( $post_id, '_event_cta_text',       true );
+	$remove_header    = get_post_meta( $post_id, '_event_remove_header',    true );
+	$start            = get_post_meta( $post_id, '_event_start_date',      true );
+	$start_time       = get_post_meta( $post_id, '_event_start_time',      true );
+	$end              = get_post_meta( $post_id, '_event_end_date',        true );
+	$end_time         = get_post_meta( $post_id, '_event_end_time',        true );
+	$date_description = get_post_meta( $post_id, '_event_date_description', true );
+	$location         = get_post_meta( $post_id, '_event_location',        true );
+	$location_url     = get_post_meta( $post_id, '_event_location_url',    true );
+	$location_logo    = get_post_meta( $post_id, '_event_location_logo',   true );
+	$pdf              = get_post_meta( $post_id, '_event_pdf',             true );
+	$pdf_label        = get_post_meta( $post_id, '_event_pdf_label',       true );
+	$cta_url          = get_post_meta( $post_id, '_event_cta_url',         true );
+	$cta_text         = get_post_meta( $post_id, '_event_cta_text',        true );
 	$credits = array();
 	for ( $i = 1; $i <= 3; $i++ ) {
 		$label = get_post_meta( $post_id, "_event_credit_label_{$i}", true );
@@ -72,6 +75,17 @@ if ( have_posts() ) :
 						<?php echo esc_html( $end_fmt ); ?>
 					<?php endif; ?>
 				</p>
+				<?php endif; ?>
+
+				<?php if ( $start_time ) :
+					$time_str = date( 'g:i A', strtotime( $start_time ) );
+					if ( $end_time ) $time_str .= ' – ' . date( 'g:i A', strtotime( $end_time ) );
+				?>
+				<p class="se-single-header__time"><?php echo esc_html( $time_str ); ?></p>
+				<?php endif; ?>
+
+				<?php if ( $date_description ) : ?>
+				<p class="se-single-header__date-desc"><?php echo esc_html( $date_description ); ?></p>
 				<?php endif; ?>
 
 				<?php if ( $location ) : ?>
