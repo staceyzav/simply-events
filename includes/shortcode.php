@@ -183,11 +183,11 @@ function simply_events_shortcode( $atts ) {
 				// Date formatting
 				$start_ts     = $start ? strtotime( $start ) : false;
 				$end_ts       = ( $end && $end !== $start ) ? strtotime( $end ) : false;
-				$start_day    = $start_ts ? date( 'd', $start_ts ) : '';
-				$start_month  = $start_ts ? date( 'M', $start_ts ) : '';
-				$start_year   = $start_ts ? date( 'Y', $start_ts ) : '';
-				$end_day      = $end_ts ? date( 'd', $end_ts ) : '';
-				$end_month    = $end_ts ? date( 'M', $end_ts ) : '';
+				$start_day    = $start_ts ? date_i18n( 'd', $start_ts ) : '';
+				$start_month  = $start_ts ? date_i18n( 'M', $start_ts ) : '';
+				$start_year   = $start_ts ? date_i18n( 'Y', $start_ts ) : '';
+				$end_day      = $end_ts ? date_i18n( 'd', $end_ts ) : '';
+				$end_month    = $end_ts ? date_i18n( 'M', $end_ts ) : '';
 				?>
 				<article class="se-event-card ss-card" data-cats="<?php echo esc_attr( $cat_slugs ); ?>">
 

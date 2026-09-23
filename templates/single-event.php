@@ -78,8 +78,8 @@ if ( have_posts() ) :
 				<?php endif; ?>
 
 				<?php if ( $start_time ) :
-					$time_str = date( 'g:i A', strtotime( $start_time ) );
-					if ( $end_time ) $time_str .= ' – ' . date( 'g:i A', strtotime( $end_time ) );
+					$time_str = date_i18n( 'g:i A', strtotime( $start_time ) );
+					if ( $end_time ) $time_str .= ' – ' . date_i18n( 'g:i A', strtotime( $end_time ) );
 				?>
 				<p class="se-single-header__time"><?php echo esc_html( $time_str ); ?></p>
 				<?php endif; ?>
