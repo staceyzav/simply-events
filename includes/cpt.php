@@ -212,6 +212,12 @@ function simply_events_meta_box_cb( $post ) {
 			<span class="se-meta-note"><?php esc_html_e( 'Link to PDF or website', 'simply-events' ); ?></span>
 			<input type="url" id="event_cta_url" name="event_cta_url" value="<?php echo esc_attr( $cta_url ); ?>" placeholder="https://...">
 		</div>
+		<div class="se-meta-field se-meta-full">
+			<label style="font-weight:400;cursor:pointer;">
+				<input type="checkbox" name="event_cta_new_tab" value="1" <?php checked( get_post_meta( $post->ID, '_event_cta_new_tab', true ), '1' ); ?> style="width:auto;margin-right:6px;">
+				<?php esc_html_e( 'Open in new tab', 'simply-events' ); ?>
+			</label>
+		</div>
 		<?php endif; ?>
 
 		<?php if ( $show( 'event_credits' ) ) : ?>
@@ -274,8 +280,9 @@ function simply_events_save_meta( $post_id ) {
 		return;
 	}
 
-	// Featured checkbox — unchecked = not in POST, so handle separately
-	update_post_meta( $post_id, '_event_featured', isset( $_POST['event_featured'] ) ? '1' : '0' );
+	// Checkboxes — unchecked = not in POST, handle separately
+	update_post_meta( $post_id, '_event_featured',   isset( $_POST['event_featured'] )   ? '1' : '0' );
+	update_post_meta( $post_id, '_event_cta_new_tab', isset( $_POST['event_cta_new_tab'] ) ? '1' : '' );
 
 	$fields = array(
 		'event_start_date'       => array( 'key' => '_event_start_date',       'fn' => 'se_normalize_date' ),
