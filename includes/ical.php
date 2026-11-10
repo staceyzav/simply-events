@@ -49,33 +49,48 @@ function se_ical_output() {
 	while ( $events->have_posts() ) {
 		$events->the_post();
 		$post_id    = get_the_ID();
-		$e_start    = get_post_meta( $post_id, '_event_start_date', true );
-		$e_end      = get_post_meta( $post_id, '_event_end_date',   true );
-		$start_time = get_post_meta( $post_id, '_event_start_time', true );
-		$end_time   = get_post_meta( $post_id, '_event_end_time',   true );
-		$location   = get_post_meta( $post_id, '_event_location',   true );
+		$e_start         = get_post_meta( $post_id, '_event_start_date',      true );
+		$e_end           = get_post_meta( $post_id, '_event_end_date',        true );
+		$start_time      = get_post_meta( $post_id, '_event_start_time',      true );
+		$end_time        = get_post_meta( $post_id, '_event_end_time',        true );
+		$location        = get_post_meta( $post_id, '_event_location',        true );
+		$recurrence      = get_post_meta( $post_id, '_event_recurrence',      true );
+		$recurrence_days = get_post_meta( $post_id, '_event_recurrence_days', true );
 
 		if ( ! $e_start ) continue;
 
-		$uid = 'simply-event-' . $post_id . '@' . $site_host;
+		$uid      = 'simply-event-' . $post_id . '@' . $site_host;
+		$end_date = ( $e_end && $e_end >= $e_start ) ? $e_end : $e_start;
+
+		// For weekly recurring events, find the first actual occurrence
+		$first_start = $e_start;
+		if ( $recurrence === 'weekly' && $recurrence_days ) {
+			$rec_days_arr = array_map( 'intval', explode( ',', $recurrence_days ) );
+			$ts = strtotime( $e_start );
+			while ( ! in_array( (int) date( 'w', $ts ), $rec_days_arr, true ) ) {
+				$ts = strtotime( '+1 day', $ts );
+			}
+			$first_start = date( 'Y-m-d', $ts );
+		}
 
 		if ( $start_time ) {
-			// Timed event — DTSTART/DTEND as local datetime (no timezone suffix = floating)
-			$dtstart_val = str_replace( '-', '', $e_start ) . 'T' . str_replace( ':', '', $start_time ) . '00';
+			$dtstart_val  = str_replace( '-', '', $first_start ) . 'T' . str_replace( ':', '', $start_time ) . '00';
 			$dtstart_line = 'DTSTART:' . $dtstart_val;
-
-			if ( $e_end && $end_time ) {
-				$dtend_val  = str_replace( '-', '', $e_end ) . 'T' . str_replace( ':', '', $end_time ) . '00';
-			} else {
-				$dtend_val  = $dtstart_val;
-			}
-			$dtend_line = 'DTEND:' . $dtend_val;
+			$dtend_val    = ( $e_end && $end_time ) ? str_replace( '-', '', $e_end ) . 'T' . str_replace( ':', '', $end_time ) . '00' : $dtstart_val;
+			$dtend_line   = 'DTEND:' . $dtend_val;
 		} else {
-			// All-day event — DATE value type; end date is exclusive
-			$end_date     = ( $e_end && $e_end >= $e_start ) ? $e_end : $e_start;
-			$end_excl     = date( 'Ymd', strtotime( $end_date . ' +1 day' ) );
-			$dtstart_line = 'DTSTART;VALUE=DATE:' . str_replace( '-', '', $e_start );
-			$dtend_line   = 'DTEND;VALUE=DATE:' . $end_excl;
+			$dtstart_line = 'DTSTART;VALUE=DATE:' . str_replace( '-', '', $first_start );
+			$dtend_line   = 'DTEND;VALUE=DATE:' . date( 'Ymd', strtotime( $first_start . ' +1 day' ) );
+		}
+
+		// Build RRULE for weekly recurring events
+		$rrule = '';
+		if ( $recurrence === 'weekly' && $recurrence_days ) {
+			$byday_map  = array( 'SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA' );
+			$rec_days_arr = array_map( 'intval', explode( ',', $recurrence_days ) );
+			$byday      = implode( ',', array_map( function( $d ) use ( $byday_map ) { return $byday_map[ $d ]; }, $rec_days_arr ) );
+			$until      = date( 'Ymd', strtotime( $end_date ) );
+			$rrule      = "RRULE:FREQ=WEEKLY;BYDAY={$byday};UNTIL={$until}";
 		}
 
 		$title   = se_ical_escape( get_the_title() );
@@ -87,6 +102,7 @@ function se_ical_output() {
 		echo "UID:{$uid}\r\n";
 		echo "{$dtstart_line}\r\n";
 		echo "{$dtend_line}\r\n";
+		if ( $rrule ) echo "{$rrule}\r\n";
 		echo "SUMMARY:{$title}\r\n";
 		if ( $excerpt ) echo "DESCRIPTION:{$excerpt}\r\n";
 		if ( $loc )     echo "LOCATION:{$loc}\r\n";

@@ -105,6 +105,9 @@ function simply_events_meta_box_cb( $post ) {
 	$cta_text         = get_post_meta( $post->ID, '_event_cta_text',         true );
 	$featured         = get_post_meta( $post->ID, '_event_featured',         true );
 	$date_description = get_post_meta( $post->ID, '_event_date_description', true );
+	$recurrence       = get_post_meta( $post->ID, '_event_recurrence',       true );
+	$recurrence_days  = get_post_meta( $post->ID, '_event_recurrence_days',  true );
+	$rec_days_saved   = $recurrence_days ? array_map( 'intval', explode( ',', $recurrence_days ) ) : array();
 	$credit = array();
 	for ( $i = 1; $i <= 3; $i++ ) {
 		$credit[ $i ] = array(
@@ -232,9 +235,36 @@ function simply_events_meta_box_cb( $post ) {
 		<?php endfor; ?>
 		<?php endif; ?>
 
+		<hr class="se-meta-divider">
+
+		<div class="se-meta-field se-meta-full">
+			<label for="event_recurrence"><?php esc_html_e( 'Recurrence', 'simply-events' ); ?></label>
+			<span class="se-meta-note"><?php esc_html_e( 'For multi-day events that repeat on specific days (e.g. every Saturday)', 'simply-events' ); ?></span>
+			<select id="event_recurrence" name="event_recurrence" style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:3px;font-size:13px;margin-top:4px;">
+				<option value="" <?php selected( $recurrence, '' ); ?>><?php esc_html_e( 'None — single date or continuous range', 'simply-events' ); ?></option>
+				<option value="weekly" <?php selected( $recurrence, 'weekly' ); ?>><?php esc_html_e( 'Weekly — repeats on selected days', 'simply-events' ); ?></option>
+			</select>
+		</div>
+
+		<div class="se-meta-field se-meta-full se-recurrence-days" style="display:<?php echo $recurrence === 'weekly' ? 'flex' : 'none'; ?>;flex-wrap:wrap;gap:12px;align-items:center;">
+			<span style="font-weight:600;font-size:13px;"><?php esc_html_e( 'Repeat on', 'simply-events' ); ?></span>
+			<?php
+			$day_labels = array( 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat' );
+			foreach ( $day_labels as $i => $label ) :
+			?>
+			<label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:400;cursor:pointer;">
+				<input type="checkbox" name="event_recurrence_days[]" value="<?php echo $i; ?>" <?php checked( in_array( $i, $rec_days_saved, true ) ); ?>>
+				<?php echo esc_html( $label ); ?>
+			</label>
+			<?php endforeach; ?>
+		</div>
+
 	</div>
 	<script>
 	jQuery(function($){
+		$('#event_recurrence').on('change', function(){
+			$('.se-recurrence-days').toggle( $(this).val() === 'weekly' );
+		});
 		<?php if ( $show( 'event_pdf' ) ) : ?>
 		$('#se-pdf-upload').on('click', function(e){
 			e.preventDefault();
@@ -281,8 +311,14 @@ function simply_events_save_meta( $post_id ) {
 	}
 
 	// Checkboxes — unchecked = not in POST, handle separately
-	update_post_meta( $post_id, '_event_featured',   isset( $_POST['event_featured'] )   ? '1' : '0' );
+	update_post_meta( $post_id, '_event_featured',    isset( $_POST['event_featured'] )    ? '1' : '0' );
 	update_post_meta( $post_id, '_event_cta_new_tab', isset( $_POST['event_cta_new_tab'] ) ? '1' : '' );
+
+	// Recurrence
+	$recurrence = isset( $_POST['event_recurrence'] ) ? sanitize_text_field( $_POST['event_recurrence'] ) : '';
+	update_post_meta( $post_id, '_event_recurrence', $recurrence );
+	$rec_days = isset( $_POST['event_recurrence_days'] ) ? array_map( 'intval', (array) $_POST['event_recurrence_days'] ) : array();
+	update_post_meta( $post_id, '_event_recurrence_days', implode( ',', $rec_days ) );
 
 	$fields = array(
 		'event_start_date'       => array( 'key' => '_event_start_date',       'fn' => 'se_normalize_date' ),

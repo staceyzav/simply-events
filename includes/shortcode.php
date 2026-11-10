@@ -59,10 +59,22 @@ function se_calendar_html( $posts ) {
 		if ( ! $e_start ) continue;
 		if ( ! $e_end || $e_end < $e_start ) $e_end = $e_start;
 
-		$cur_ts    = strtotime( $e_start );
-		$end_ts    = strtotime( $e_end );
-		$day_count = 0;
-		while ( $cur_ts <= $end_ts && $day_count < 60 ) {
+		$recurrence      = get_post_meta( $cal_post->ID, '_event_recurrence',      true );
+		$recurrence_days = get_post_meta( $cal_post->ID, '_event_recurrence_days', true );
+		$rec_days        = ( $recurrence === 'weekly' && $recurrence_days )
+			? array_map( 'intval', explode( ',', $recurrence_days ) )
+			: array();
+
+		$cur_ts     = strtotime( $e_start );
+		$end_ts     = strtotime( $e_end );
+		$entry_count = 0;
+
+		while ( $cur_ts <= $end_ts && $entry_count < 200 ) {
+			// Skip days that don't match the recurrence pattern
+			if ( ! empty( $rec_days ) && ! in_array( (int) date( 'w', $cur_ts ), $rec_days, true ) ) {
+				$cur_ts = strtotime( '+1 day', $cur_ts );
+				continue;
+			}
 			$cal_data[] = array(
 				'date'       => date( 'Y-m-d', $cur_ts ),
 				'title'      => wp_trim_words( $cal_post->post_title, 4, '…' ),
@@ -71,7 +83,7 @@ function se_calendar_html( $posts ) {
 				'photo'      => get_the_post_thumbnail_url( $cal_post->ID, 'thumbnail' ) ?: '',
 			);
 			$cur_ts = strtotime( '+1 day', $cur_ts );
-			$day_count++;
+			$entry_count++;
 		}
 	}
 
