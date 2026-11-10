@@ -28,45 +28,85 @@ function simply_events_enqueue() {
 // SHORTCODE — [simply_events]
 //
 // Attributes:
-//   title       Section heading. Default: "Upcoming Events"
-//   limit       Max events to show. Default: 5
-//   show_filter Show category filter tabs. Default: true
-//   cta_text    CTA button label. Default: "View Full Schedule"
-//   cta_url     CTA button URL. Default: /events
-//   category    Slug — pre-filter to a specific category. Default: all
-//   show_future Include upcoming events (start date >= today). Default: true
-//   show_past   Include past events (start date < today). Default: false
-//   order       Sort by start date: ASC (soonest first) or DESC (latest first). Default: ASC
-//   view        Display mode: grid or list. Default: grid
+//   title         Section heading. Default: "Upcoming Events"
+//   limit         Max events to show. Default: 5
+//   show_filter   Show category filter tabs. Default: true
+//   cta_text      CTA button label. Default: "View Full Schedule"
+//   cta_url       CTA button URL. Default: /events
+//   category      Slug — pre-filter to a specific category. Default: all
+//   show_future   Include upcoming events (start date >= today). Default: true
+//   show_past     Include past events (start date < today). Default: false
+//   order         Sort by start date: ASC (soonest first) or DESC (latest first). Default: ASC
+//   view          Display mode: grid or list. Default: grid
+//   show_calendar Show week-strip calendar above events. Default: false
 // ==========================================================================
+
+// ==========================================================================
+// CALENDAR UTILITY — se_calendar_html( $posts_array )
+//
+// Builds the .se-cal week-strip HTML from an array of WP_Post objects.
+// Called by [simply_events show_calendar="yes"], simply_blocks_render_events,
+// and gbr_events_shortcode so the logic lives in one place.
+// ==========================================================================
+
+function se_calendar_html( $posts ) {
+	if ( empty( $posts ) ) return '';
+
+	$cal_data = array();
+	foreach ( $posts as $cal_post ) {
+		$e_start = get_post_meta( $cal_post->ID, '_event_start_date', true );
+		$e_end   = get_post_meta( $cal_post->ID, '_event_end_date',   true );
+		if ( ! $e_start ) continue;
+		if ( ! $e_end || $e_end < $e_start ) $e_end = $e_start;
+
+		$cur_ts    = strtotime( $e_start );
+		$end_ts    = strtotime( $e_end );
+		$day_count = 0;
+		while ( $cur_ts <= $end_ts && $day_count < 60 ) {
+			$cal_data[] = array(
+				'date'  => date( 'Y-m-d', $cur_ts ),
+				'title' => wp_trim_words( $cal_post->post_title, 4, '…' ),
+				'url'   => get_permalink( $cal_post->ID ),
+			);
+			$cur_ts = strtotime( '+1 day', $cur_ts );
+			$day_count++;
+		}
+	}
+
+	$ical_url = home_url( '/events/calendar.ics' );
+	return '<div class="se-cal" data-events="' . esc_attr( wp_json_encode( $cal_data ) ) . '" data-ical-url="' . esc_attr( $ical_url ) . '"></div>';
+}
+
 
 add_shortcode( 'simply_events', 'simply_events_shortcode' );
 
 function simply_events_shortcode( $atts ) {
 
 	$atts = shortcode_atts( array(
-		'title'       => __( 'Upcoming Events', 'simply-events' ),
-		'limit'       => 5,
-		'show_filter' => 'true',
-		'cta_text'    => '',
-		'cta_url'     => '',
-		'category'    => '',
-		'show_future' => 'true',
-		'show_past'   => 'false',
-		'order'       => 'ASC',
-		'view'        => 'grid',
-		'exclude'     => 0,
+		'title'         => __( 'Upcoming Events', 'simply-events' ),
+		'limit'         => 5,
+		'show_filter'   => 'true',
+		'cta_text'      => '',
+		'cta_url'       => '',
+		'category'      => '',
+		'show_future'   => 'true',
+		'show_past'     => 'false',
+		'order'         => 'ASC',
+		'view'          => 'grid',
+		'exclude'       => 0,
+		'show_calendar' => 'false',
 	), $atts, 'simply_events' );
 
-	$limit       = absint( $atts['limit'] );
-	$show_filter = filter_var( $atts['show_filter'], FILTER_VALIDATE_BOOLEAN ) && empty( $atts['category'] );
-	$show_future = filter_var( $atts['show_future'], FILTER_VALIDATE_BOOLEAN );
-	$show_past   = filter_var( $atts['show_past'],   FILTER_VALIDATE_BOOLEAN );
-	$order       = strtoupper( $atts['order'] ) === 'DESC' ? 'DESC' : 'ASC';
-	$view        = $atts['view'] === 'list' ? 'list' : 'grid';
-	$title       = esc_html( $atts['title'] );
-	$cta_text    = esc_html( $atts['cta_text'] );
-	$cta_url     = esc_url( $atts['cta_url'] );
+	$limit         = absint( $atts['limit'] );
+	$show_filter   = filter_var( $atts['show_filter'],   FILTER_VALIDATE_BOOLEAN ) && empty( $atts['category'] );
+	$show_future   = filter_var( $atts['show_future'],   FILTER_VALIDATE_BOOLEAN );
+	$show_past     = filter_var( $atts['show_past'],     FILTER_VALIDATE_BOOLEAN );
+	$show_calendar = filter_var( $atts['show_calendar'], FILTER_VALIDATE_BOOLEAN );
+	$order         = strtoupper( $atts['order'] ) === 'DESC' ? 'DESC' : 'ASC';
+	$view          = $atts['view'] === 'list' ? 'list' : 'grid';
+	$title         = esc_html( $atts['title'] );
+	$cta_text      = esc_html( $atts['cta_text'] );
+	$cta_url       = esc_url( $atts['cta_url'] );
 
 	// Build date meta_query based on show_future / show_past
 	$meta_query = array();
@@ -129,6 +169,10 @@ function simply_events_shortcode( $atts ) {
 	) );
 
 	ob_start();
+
+	if ( $show_calendar ) {
+		echo se_calendar_html( $events->posts ); // phpcs:ignore
+	}
 	?>
 	<div class="se-events-block" data-limit="<?php echo esc_attr( $limit ); ?>">
 

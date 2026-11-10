@@ -20,6 +20,16 @@ define( 'SIMPLY_EVENTS_URL',  plugin_dir_url( __FILE__ ) );
 
 require_once SIMPLY_EVENTS_PATH . 'includes/cpt.php';
 require_once SIMPLY_EVENTS_PATH . 'includes/shortcode.php';
+require_once SIMPLY_EVENTS_PATH . 'includes/ical.php';
+
+// Flush rewrite rules once when version changes (picks up new iCal rewrite rule).
+add_action( 'init', 'simply_events_maybe_flush', 20 );
+function simply_events_maybe_flush() {
+	if ( get_option( 'simply_events_flushed' ) !== SIMPLY_EVENTS_VERSION ) {
+		flush_rewrite_rules();
+		update_option( 'simply_events_flushed', SIMPLY_EVENTS_VERSION );
+	}
+}
 
 // ==========================================================================
 // SINGLE EVENT TEMPLATE

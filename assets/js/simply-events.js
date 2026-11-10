@@ -11,7 +11,263 @@
 
 	'use strict';
 
+	// =========================================================================
+	// Calendar week strip
+	// =========================================================================
+
+	var DAY_NAMES   = [ 'SUN', 'MON', 'TUES', 'WED', 'THUR', 'FRI', 'SAT' ];
+	var MONTH_NAMES = [ 'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+	                    'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER' ];
+
+	function seCalInit( cal ) {
+		var events = JSON.parse( cal.dataset.events || '[]' );
+
+		// Build date → [{title, url}] lookup
+		var lookup = {};
+		events.forEach( function ( e ) {
+			if ( ! lookup[ e.date ] ) lookup[ e.date ] = [];
+			lookup[ e.date ].push( { title: e.title, url: e.url } );
+		} );
+
+		// Anchor everything to the Sunday of the current week
+		var today = new Date();
+		today.setHours( 0, 0, 0, 0 );
+		var weekStart = new Date( today );
+		weekStart.setDate( today.getDate() - today.getDay() );
+
+		var offset    = 0; // days from weekStart, always a multiple of 7
+		var direction = 0; // -1 prev, 1 next, 0 initial
+
+		// Returns the date that is n days after weekStart
+		function dayFromOffset( n ) {
+			var d = new Date( weekStart );
+			d.setDate( weekStart.getDate() + n );
+			return d;
+		}
+
+		// Build DOM skeleton
+		var header = document.createElement( 'div' );
+		header.className = 'se-cal__header';
+
+		// Header: « NOVEMBER 2026 »
+		var prevMonthBtn = document.createElement( 'button' );
+		prevMonthBtn.className = 'se-cal__nav se-cal__nav--prev-month';
+		prevMonthBtn.setAttribute( 'aria-label', 'Previous month' );
+		prevMonthBtn.innerHTML = '&#171;';
+
+		var monthLabel = document.createElement( 'span' );
+		monthLabel.className = 'se-cal__month-label';
+
+		var nextMonthBtn = document.createElement( 'button' );
+		nextMonthBtn.className = 'se-cal__nav se-cal__nav--next-month';
+		nextMonthBtn.setAttribute( 'aria-label', 'Next month' );
+		nextMonthBtn.innerHTML = '&#187;';
+
+		header.appendChild( prevMonthBtn );
+		header.appendChild( monthLabel );
+		header.appendChild( nextMonthBtn );
+
+		// Subscribe button + dropdown
+		var icalUrl  = cal.dataset.icalUrl || '';
+		if ( icalUrl ) {
+			var webcalUrl  = icalUrl.replace( /^https?:\/\//, 'webcal://' );
+			var googleUrl  = 'https://calendar.google.com/calendar/r?cid=' + encodeURIComponent( webcalUrl );
+			var outlookUrl = 'https://outlook.live.com/calendar/0/addcalendar?url=' + encodeURIComponent( webcalUrl );
+
+			var subscribeWrap = document.createElement( 'div' );
+			subscribeWrap.className = 'se-cal__subscribe';
+
+			var subscribeBtn = document.createElement( 'button' );
+			subscribeBtn.className = 'se-cal__subscribe-btn';
+			subscribeBtn.setAttribute( 'aria-expanded', 'false' );
+			subscribeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Subscribe';
+
+			var dropdown = document.createElement( 'div' );
+			dropdown.className = 'se-cal__dropdown';
+			dropdown.setAttribute( 'role', 'menu' );
+
+			var items = [
+				{ label: 'Apple Calendar',  href: webcalUrl,  note: 'Opens in default app' },
+				{ label: 'Google Calendar', href: googleUrl,  note: 'Opens in browser' },
+				{ label: 'Outlook.com',     href: outlookUrl, note: 'Opens in browser' },
+				{ label: 'Download .ics',   href: icalUrl,    note: 'Manual import',  download: true },
+			];
+
+			items.forEach( function ( item ) {
+				var a = document.createElement( 'a' );
+				a.href      = item.href;
+				a.className = 'se-cal__dropdown-item';
+				a.setAttribute( 'role', 'menuitem' );
+				if ( item.download ) {
+					a.setAttribute( 'download', 'events.ics' );
+				} else {
+					a.target = '_blank';
+					a.rel    = 'noopener';
+				}
+				a.innerHTML = '<span class="se-cal__dropdown-label">' + item.label + '</span>' +
+				              '<span class="se-cal__dropdown-note">'  + item.note  + '</span>';
+				dropdown.appendChild( a );
+			} );
+
+			subscribeWrap.appendChild( subscribeBtn );
+			subscribeWrap.appendChild( dropdown );
+			header.appendChild( subscribeWrap );
+
+			// Toggle dropdown
+			subscribeBtn.addEventListener( 'click', function ( e ) {
+				e.stopPropagation();
+				var open = dropdown.classList.toggle( 'is-open' );
+				subscribeBtn.setAttribute( 'aria-expanded', open ? 'true' : 'false' );
+			} );
+
+			// Close on outside click
+			document.addEventListener( 'click', function () {
+				dropdown.classList.remove( 'is-open' );
+				subscribeBtn.setAttribute( 'aria-expanded', 'false' );
+			} );
+		}
+
+		cal.appendChild( header );
+
+		// Strip: ‹ [8 days] ›
+		var strip = document.createElement( 'div' );
+		strip.className = 'se-cal__strip';
+
+		var prevBtn = document.createElement( 'button' );
+		prevBtn.className = 'se-cal__nav se-cal__nav--prev se-cal__strip-nav';
+		prevBtn.setAttribute( 'aria-label', 'Previous week' );
+		prevBtn.innerHTML = '&#8249;';
+
+		var nextBtn = document.createElement( 'button' );
+		nextBtn.className = 'se-cal__nav se-cal__nav--next se-cal__strip-nav';
+		nextBtn.setAttribute( 'aria-label', 'Next week' );
+		nextBtn.innerHTML = '&#8250;';
+
+		strip.appendChild( prevBtn );
+		// Day columns inserted by render()
+		strip.appendChild( nextBtn );
+		cal.appendChild( strip );
+
+		function formatDate( d ) {
+			var m = String( d.getMonth() + 1 ).padStart( 2, '0' );
+			var day = String( d.getDate() ).padStart( 2, '0' );
+			return d.getFullYear() + '-' + m + '-' + day;
+		}
+
+		function truncate( str, max ) {
+			return str.length <= max ? str : str.slice( 0, max ).trimEnd() + '…';
+		}
+
+		// Returns the offset (days from weekStart) for the Sunday of the week
+		// containing the 1st of the target month. Never goes before weekStart.
+		function offsetForMonthStart( year, month ) {
+			var first  = new Date( year, month, 1 );
+			var sunday = new Date( first );
+			sunday.setDate( first.getDate() - first.getDay() );
+			var diff = Math.round( ( sunday - weekStart ) / 86400000 );
+			return Math.max( 0, diff );
+		}
+
+		function render() {
+			prevBtn.disabled      = offset === 0;
+			prevMonthBtn.disabled = offset === 0;
+
+			// Direction class for slide animation
+			strip.classList.remove( 'se-going-next', 'se-going-prev' );
+			if ( direction > 0 ) strip.classList.add( 'se-going-next' );
+			if ( direction < 0 ) strip.classList.add( 'se-going-prev' );
+
+			// Remove existing day columns (keep prevBtn and nextBtn)
+			strip.querySelectorAll( '.se-cal__day' ).forEach( function ( el ) { el.remove(); } );
+
+			for ( var i = 0; i < 7; i++ ) {
+				var d       = dayFromOffset( offset + i );
+				var dateStr = formatDate( d );
+				var isToday = d.getTime() === today.getTime();
+				var isPast  = d < today;
+
+				var col = document.createElement( 'div' );
+				col.className = 'se-cal__day' +
+					( isToday ? ' se-cal__day--today' : '' ) +
+					( isPast  ? ' se-cal__day--past'  : '' );
+
+				var nameEl = document.createElement( 'div' );
+				nameEl.className   = 'se-cal__day-name';
+				nameEl.textContent = DAY_NAMES[ d.getDay() ];
+
+				var numEl = document.createElement( 'div' );
+				numEl.className   = 'se-cal__day-num';
+				numEl.textContent = d.getDate();
+
+				var eventsEl = document.createElement( 'div' );
+				eventsEl.className = 'se-cal__day-events';
+
+				if ( lookup[ dateStr ] ) {
+					lookup[ dateStr ].forEach( function ( ev ) {
+						var pill = document.createElement( 'a' );
+						pill.className   = 'se-cal__pill';
+						pill.href        = ev.url;
+						pill.textContent = truncate( ev.title, 18 );
+						pill.title       = ev.title;
+						eventsEl.appendChild( pill );
+					} );
+				}
+
+				col.style.animationDelay = ( i * 0.025 ) + 's';
+				col.appendChild( nameEl );
+				col.appendChild( numEl );
+				col.appendChild( eventsEl );
+				// Insert day columns before the nextBtn
+				strip.insertBefore( col, nextBtn );
+			}
+
+			// Month label = month of the first visible day
+			var firstDay = dayFromOffset( offset );
+			monthLabel.textContent = MONTH_NAMES[ firstDay.getMonth() ] + ' ' + firstDay.getFullYear();
+		}
+
+		prevMonthBtn.addEventListener( 'click', function () {
+			var firstDay = dayFromOffset( offset );
+			var y = firstDay.getFullYear();
+			var m = firstDay.getMonth() - 1;
+			if ( m < 0 ) { m = 11; y--; }
+			direction = -1;
+			offset = offsetForMonthStart( y, m );
+			render();
+		} );
+
+		prevBtn.addEventListener( 'click', function () {
+			direction = -1;
+			offset = Math.max( 0, offset - 7 );
+			render();
+		} );
+
+		nextBtn.addEventListener( 'click', function () {
+			direction = 1;
+			offset += 7;
+			render();
+		} );
+
+		nextMonthBtn.addEventListener( 'click', function () {
+			var firstDay = dayFromOffset( offset );
+			var y = firstDay.getFullYear();
+			var m = firstDay.getMonth() + 1;
+			if ( m > 11 ) { m = 0; y++; }
+			direction = 1;
+			offset = offsetForMonthStart( y, m );
+			render();
+		} );
+
+		render();
+	}
+
+	// =========================================================================
+	// Category filtering
+	// =========================================================================
+
 	document.addEventListener( 'DOMContentLoaded', function () {
+
+		document.querySelectorAll( '.se-cal' ).forEach( seCalInit );
 
 		document.querySelectorAll( '.se-events-block' ).forEach( function ( block ) {
 
