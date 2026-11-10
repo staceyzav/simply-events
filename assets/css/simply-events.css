@@ -528,7 +528,7 @@
 	text-transform: uppercase;
 	color: var( --se-heading );
 	text-align: center;
-	min-width: 160px;
+	min-width: 200px;
 }
 
 .se-cal__nav {
@@ -554,6 +554,7 @@
 	opacity: 0.25;
 	cursor: default;
 }
+
 
 /* Day strip — nav col + 7 day cols (Sun–Sat) + nav col */
 .se-cal__strip {
@@ -612,6 +613,7 @@
 	gap: 2px;
 	transition: background-color 0.15s;
 	cursor: default;
+	position: relative;
 }
 
 .se-cal__day:hover {
@@ -654,14 +656,65 @@
 	white-space: normal;
 }
 
-/* Other-month days (e.g. Nov 29–30 when viewing December) */
-.se-cal__day--other-month .se-cal__day-name,
-.se-cal__day--other-month .se-cal__day-num {
-	color: #c0c8d0;
+/* Other-month days — subtle tint only, text stays readable */
+.se-cal__day--other-month {
+	background-color: rgba( 0, 0, 0, 0.02 );
 }
 
-.se-cal__day--other-month .se-cal__day-name {
-	font-style: italic;
+/* Header month separator */
+.se-cal__month-sep {
+	color: var( --se-text-muted );
+	opacity: 0.5;
+	padding: 0 10px;
+	font-weight: 400;
+}
+
+/* Month boundary — left border + "JAN →" pill intersecting top edge */
+.se-cal__day--boundary {
+	border-left: 2px solid var( --se-accent );
+}
+
+.se-cal__day--boundary::before {
+	content: attr( data-month-label );
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translate( -50%, -50% );
+	background: var( --se-accent );
+	color: #ffffff;
+	font-family: var( --se-font-display );
+	font-size: 8px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	padding: 2px 7px;
+	border-radius: 10px;
+	white-space: nowrap;
+	line-height: 1.5;
+	z-index: 5;
+	pointer-events: none;
+}
+
+/* Month end — "← DEC" pill intersecting bottom edge */
+.se-cal__day--month-end::after {
+	content: attr( data-month-end-label );
+	position: absolute;
+	bottom: 0;
+	left: 50%;
+	transform: translate( -50%, 50% );
+	background: var( --se-accent );
+	color: #ffffff;
+	font-family: var( --se-font-display );
+	font-size: 8px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	padding: 2px 7px;
+	border-radius: 10px;
+	white-space: nowrap;
+	line-height: 1.5;
+	z-index: 5;
+	pointer-events: none;
 }
 
 .se-cal__day:last-child {

@@ -51,7 +51,7 @@
 		var header = document.createElement( 'div' );
 		header.className = 'se-cal__header';
 
-		// Header: « NOVEMBER 2026 »
+		// Header: «  MONTH LABEL  »
 		var prevMonthBtn = document.createElement( 'button' );
 		prevMonthBtn.className = 'se-cal__nav se-cal__nav--prev-month';
 		prevMonthBtn.setAttribute( 'aria-label', 'Previous month' );
@@ -174,8 +174,9 @@
 		}
 
 		function render() {
-			prevBtn.disabled      = offset === 0;
-			prevMonthBtn.disabled = offset === 0;
+			var atStart = offset === 0;
+			prevBtn.disabled      = atStart;
+			prevMonthBtn.disabled = atStart;
 
 			// Direction class for slide animation
 			strip.classList.remove( 'se-going-next', 'se-going-prev' );
@@ -191,12 +192,25 @@
 				var isToday      = d.getTime() === today.getTime();
 				var isPast       = d < today;
 				var isOtherMonth = d.getMonth() !== displayMonth;
+				// Boundary = 1st of a month; month-end = last day before a month change
+				var isBoundary   = d.getDate() === 1;
+				var nextDay      = dayFromOffset( offset + i + 1 );
+				var isMonthEnd   = i < 6 && nextDay.getMonth() !== d.getMonth();
 
 				var col = document.createElement( 'div' );
 				col.className = 'se-cal__day' +
 					( isToday      ? ' se-cal__day--today'       : '' ) +
 					( isPast       ? ' se-cal__day--past'        : '' ) +
-					( isOtherMonth ? ' se-cal__day--other-month' : '' );
+					( isOtherMonth ? ' se-cal__day--other-month' : '' ) +
+					( isBoundary   ? ' se-cal__day--boundary'    : '' ) +
+					( isMonthEnd   ? ' se-cal__day--month-end'   : '' );
+
+				if ( isBoundary ) {
+					col.dataset.monthLabel = MONTH_NAMES[ d.getMonth() ].slice( 0, 3 ) + ' →';
+				}
+				if ( isMonthEnd ) {
+					col.dataset.monthEndLabel = '← ' + MONTH_NAMES[ d.getMonth() ].slice( 0, 3 );
+				}
 
 				var nameEl = document.createElement( 'div' );
 				nameEl.className   = 'se-cal__day-name';
@@ -253,7 +267,15 @@
 				strip.insertBefore( col, nextBtn );
 			}
 
-			monthLabel.textContent = MONTH_NAMES[ displayMonth ] + ' ' + displayYear;
+			var firstDay = dayFromOffset( offset );
+			var lastDay  = dayFromOffset( offset + 6 );
+			if ( firstDay.getMonth() === lastDay.getMonth() ) {
+				monthLabel.textContent = MONTH_NAMES[ firstDay.getMonth() ] + ' ' + firstDay.getFullYear();
+			} else {
+				var leftPart  = MONTH_NAMES[ firstDay.getMonth() ] + ' ' + firstDay.getFullYear();
+				var rightPart = MONTH_NAMES[ lastDay.getMonth() ]  + ' ' + lastDay.getFullYear();
+				monthLabel.innerHTML = leftPart + '<span class="se-cal__month-sep">|</span>' + rightPart;
+			}
 		}
 
 		prevMonthBtn.addEventListener( 'click', function () {
@@ -266,23 +288,26 @@
 			render();
 		} );
 
-		prevBtn.addEventListener( 'click', function () {
-			direction = -1;
-			offset    = Math.max( 0, offset - 7 );
-			var d     = dayFromOffset( offset + 3 ); // mid-week day avoids month boundary flicker
+		function goPrevWeek() {
+			direction    = -1;
+			offset       = Math.max( 0, offset - 7 );
+			var d        = dayFromOffset( offset + 3 );
 			displayMonth = d.getMonth();
 			displayYear  = d.getFullYear();
 			render();
-		} );
+		}
 
-		nextBtn.addEventListener( 'click', function () {
-			direction = 1;
-			offset   += 7;
-			var d     = dayFromOffset( offset + 3 );
+		function goNextWeek() {
+			direction    = 1;
+			offset      += 7;
+			var d        = dayFromOffset( offset + 3 );
 			displayMonth = d.getMonth();
 			displayYear  = d.getFullYear();
 			render();
-		} );
+		}
+
+		prevBtn.addEventListener( 'click', goPrevWeek );
+		nextBtn.addEventListener( 'click', goNextWeek );
 
 		nextMonthBtn.addEventListener( 'click', function () {
 			var m = displayMonth + 1, y = displayYear;
