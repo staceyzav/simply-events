@@ -159,6 +159,28 @@ function simply_events_meta_box_cb( $post ) {
 			<input type="text" id="event_date_description" name="event_date_description" value="<?php echo esc_attr( $date_description ); ?>" placeholder="e.g. Every Friday and Saturday, December through March">
 		</div>
 
+		<div class="se-meta-field se-meta-full">
+			<label for="event_recurrence"><?php esc_html_e( 'Recurrence', 'simply-events' ); ?></label>
+			<span class="se-meta-note"><?php esc_html_e( 'For multi-day events that repeat on specific days (e.g. every Saturday)', 'simply-events' ); ?></span>
+			<select id="event_recurrence" name="event_recurrence" style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:3px;font-size:13px;margin-top:4px;">
+				<option value="" <?php selected( $recurrence, '' ); ?>><?php esc_html_e( 'None — single date or continuous range', 'simply-events' ); ?></option>
+				<option value="weekly" <?php selected( $recurrence, 'weekly' ); ?>><?php esc_html_e( 'Weekly — repeats on selected days', 'simply-events' ); ?></option>
+			</select>
+		</div>
+
+		<div class="se-meta-field se-meta-full se-recurrence-days" style="display:<?php echo $recurrence === 'weekly' ? 'flex' : 'none'; ?>;flex-wrap:wrap;gap:12px;align-items:center;">
+			<span style="font-weight:600;font-size:13px;"><?php esc_html_e( 'Repeat on', 'simply-events' ); ?></span>
+			<?php
+			$day_labels = array( 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat' );
+			foreach ( $day_labels as $i => $label ) :
+			?>
+			<label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:400;cursor:pointer;">
+				<input type="checkbox" name="event_recurrence_days[]" value="<?php echo $i; ?>" <?php checked( in_array( $i, $rec_days_saved, true ) ); ?>>
+				<?php echo esc_html( $label ); ?>
+			</label>
+			<?php endforeach; ?>
+		</div>
+
 		<hr class="se-meta-divider">
 
 		<div class="se-meta-field se-meta-full">
@@ -234,30 +256,6 @@ function simply_events_meta_box_cb( $post ) {
 		</div>
 		<?php endfor; ?>
 		<?php endif; ?>
-
-		<hr class="se-meta-divider">
-
-		<div class="se-meta-field se-meta-full">
-			<label for="event_recurrence"><?php esc_html_e( 'Recurrence', 'simply-events' ); ?></label>
-			<span class="se-meta-note"><?php esc_html_e( 'For multi-day events that repeat on specific days (e.g. every Saturday)', 'simply-events' ); ?></span>
-			<select id="event_recurrence" name="event_recurrence" style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:3px;font-size:13px;margin-top:4px;">
-				<option value="" <?php selected( $recurrence, '' ); ?>><?php esc_html_e( 'None — single date or continuous range', 'simply-events' ); ?></option>
-				<option value="weekly" <?php selected( $recurrence, 'weekly' ); ?>><?php esc_html_e( 'Weekly — repeats on selected days', 'simply-events' ); ?></option>
-			</select>
-		</div>
-
-		<div class="se-meta-field se-meta-full se-recurrence-days" style="display:<?php echo $recurrence === 'weekly' ? 'flex' : 'none'; ?>;flex-wrap:wrap;gap:12px;align-items:center;">
-			<span style="font-weight:600;font-size:13px;"><?php esc_html_e( 'Repeat on', 'simply-events' ); ?></span>
-			<?php
-			$day_labels = array( 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat' );
-			foreach ( $day_labels as $i => $label ) :
-			?>
-			<label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:400;cursor:pointer;">
-				<input type="checkbox" name="event_recurrence_days[]" value="<?php echo $i; ?>" <?php checked( in_array( $i, $rec_days_saved, true ) ); ?>>
-				<?php echo esc_html( $label ); ?>
-			</label>
-			<?php endforeach; ?>
-		</div>
 
 	</div>
 	<script>
