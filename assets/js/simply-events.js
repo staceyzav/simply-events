@@ -26,7 +26,7 @@
 		var lookup = {};
 		events.forEach( function ( e ) {
 			if ( ! lookup[ e.date ] ) lookup[ e.date ] = [];
-			lookup[ e.date ].push( { title: e.title, url: e.url } );
+			lookup[ e.date ].push( { title: e.title, full_title: e.full_title, url: e.url, photo: e.photo } );
 		} );
 
 		// Anchor everything to the Sunday of the current week
@@ -35,8 +35,10 @@
 		var weekStart = new Date( today );
 		weekStart.setDate( today.getDate() - today.getDay() );
 
-		var offset    = 0; // days from weekStart, always a multiple of 7
-		var direction = 0; // -1 prev, 1 next, 0 initial
+		var offset       = 0; // days from weekStart, always a multiple of 7
+		var direction    = 0; // -1 prev, 1 next, 0 initial
+		var displayMonth = today.getMonth();
+		var displayYear  = today.getFullYear();
 
 		// Returns the date that is n days after weekStart
 		function dayFromOffset( n ) {
@@ -63,9 +65,12 @@
 		nextMonthBtn.setAttribute( 'aria-label', 'Next month' );
 		nextMonthBtn.innerHTML = '&#187;';
 
-		header.appendChild( prevMonthBtn );
-		header.appendChild( monthLabel );
-		header.appendChild( nextMonthBtn );
+		var monthNav = document.createElement( 'div' );
+		monthNav.className = 'se-cal__month-nav';
+		monthNav.appendChild( prevMonthBtn );
+		monthNav.appendChild( monthLabel );
+		monthNav.appendChild( nextMonthBtn );
+		header.appendChild( monthNav );
 
 		// Subscribe button + dropdown
 		var icalUrl  = cal.dataset.icalUrl || '';
@@ -183,13 +188,15 @@
 			for ( var i = 0; i < 7; i++ ) {
 				var d       = dayFromOffset( offset + i );
 				var dateStr = formatDate( d );
-				var isToday = d.getTime() === today.getTime();
-				var isPast  = d < today;
+				var isToday      = d.getTime() === today.getTime();
+				var isPast       = d < today;
+				var isOtherMonth = d.getMonth() !== displayMonth;
 
 				var col = document.createElement( 'div' );
 				col.className = 'se-cal__day' +
-					( isToday ? ' se-cal__day--today' : '' ) +
-					( isPast  ? ' se-cal__day--past'  : '' );
+					( isToday      ? ' se-cal__day--today'       : '' ) +
+					( isPast       ? ' se-cal__day--past'        : '' ) +
+					( isOtherMonth ? ' se-cal__day--other-month' : '' );
 
 				var nameEl = document.createElement( 'div' );
 				nameEl.className   = 'se-cal__day-name';
@@ -205,10 +212,35 @@
 				if ( lookup[ dateStr ] ) {
 					lookup[ dateStr ].forEach( function ( ev ) {
 						var pill = document.createElement( 'a' );
-						pill.className   = 'se-cal__pill';
-						pill.href        = ev.url;
+						pill.className = 'se-cal__pill' + ( isOtherMonth ? ' se-cal__pill--other-month' : '' );
+						pill.href      = ev.url;
 						pill.textContent = truncate( ev.title, 18 );
-						pill.title       = ev.title;
+
+						pill.addEventListener( 'mouseenter', function ( e ) {
+							var t = seTooltip();
+							t.innerHTML = '';
+
+							if ( ev.photo ) {
+								var img = document.createElement( 'img' );
+								img.src       = ev.photo;
+								img.className = 'se-cal__tooltip-photo';
+								img.alt       = '';
+								t.appendChild( img );
+							}
+
+							var titleEl = document.createElement( 'span' );
+							titleEl.className   = 'se-cal__tooltip-title';
+							titleEl.textContent = ev.full_title || ev.title;
+							t.appendChild( titleEl );
+
+							t.style.display = 'flex';
+							sePositionTooltip( e );
+						} );
+						pill.addEventListener( 'mousemove',  sePositionTooltip );
+						pill.addEventListener( 'mouseleave', function () {
+							seTooltip().style.display = 'none';
+						} );
+
 						eventsEl.appendChild( pill );
 					} );
 				}
@@ -221,44 +253,80 @@
 				strip.insertBefore( col, nextBtn );
 			}
 
-			// Month label = month of the first visible day
-			var firstDay = dayFromOffset( offset );
-			monthLabel.textContent = MONTH_NAMES[ firstDay.getMonth() ] + ' ' + firstDay.getFullYear();
+			monthLabel.textContent = MONTH_NAMES[ displayMonth ] + ' ' + displayYear;
 		}
 
 		prevMonthBtn.addEventListener( 'click', function () {
-			var firstDay = dayFromOffset( offset );
-			var y = firstDay.getFullYear();
-			var m = firstDay.getMonth() - 1;
+			var m = displayMonth - 1, y = displayYear;
 			if ( m < 0 ) { m = 11; y--; }
-			direction = -1;
-			offset = offsetForMonthStart( y, m );
+			direction      = -1;
+			displayMonth   = m;
+			displayYear    = y;
+			offset         = offsetForMonthStart( y, m );
 			render();
 		} );
 
 		prevBtn.addEventListener( 'click', function () {
 			direction = -1;
-			offset = Math.max( 0, offset - 7 );
+			offset    = Math.max( 0, offset - 7 );
+			var d     = dayFromOffset( offset + 3 ); // mid-week day avoids month boundary flicker
+			displayMonth = d.getMonth();
+			displayYear  = d.getFullYear();
 			render();
 		} );
 
 		nextBtn.addEventListener( 'click', function () {
 			direction = 1;
-			offset += 7;
+			offset   += 7;
+			var d     = dayFromOffset( offset + 3 );
+			displayMonth = d.getMonth();
+			displayYear  = d.getFullYear();
 			render();
 		} );
 
 		nextMonthBtn.addEventListener( 'click', function () {
-			var firstDay = dayFromOffset( offset );
-			var y = firstDay.getFullYear();
-			var m = firstDay.getMonth() + 1;
+			var m = displayMonth + 1, y = displayYear;
 			if ( m > 11 ) { m = 0; y++; }
-			direction = 1;
-			offset = offsetForMonthStart( y, m );
+			direction    = 1;
+			displayMonth = m;
+			displayYear  = y;
+			offset       = offsetForMonthStart( y, m );
 			render();
 		} );
 
 		render();
+	}
+
+	// Shared floating tooltip for pill hover — created once, reused
+	var seTooltipEl = null;
+
+	function seTooltip() {
+		if ( ! seTooltipEl ) {
+			seTooltipEl = document.createElement( 'div' );
+			seTooltipEl.className = 'se-cal__tooltip';
+			document.body.appendChild( seTooltipEl );
+		}
+		return seTooltipEl;
+	}
+
+	function sePositionTooltip( e ) {
+		var t   = seTooltip();
+		var gap = 14;
+		var tw  = t.offsetWidth  || 180;
+		var th  = t.offsetHeight || 28;
+		var vw  = window.innerWidth;
+		var vh  = window.innerHeight;
+
+		var left = ( e.clientX + gap + tw > vw )
+			? e.clientX - tw - gap        // flip left
+			: e.clientX + gap;
+
+		var top = e.clientY - th / 2;
+		if ( top < 6 )            top = 6;
+		if ( top + th > vh - 6 )  top = vh - th - 6;
+
+		t.style.left = left + 'px';
+		t.style.top  = top  + 'px';
 	}
 
 	// =========================================================================

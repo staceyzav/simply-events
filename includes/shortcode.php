@@ -64,9 +64,11 @@ function se_calendar_html( $posts ) {
 		$day_count = 0;
 		while ( $cur_ts <= $end_ts && $day_count < 60 ) {
 			$cal_data[] = array(
-				'date'  => date( 'Y-m-d', $cur_ts ),
-				'title' => wp_trim_words( $cal_post->post_title, 4, '…' ),
-				'url'   => get_permalink( $cal_post->ID ),
+				'date'       => date( 'Y-m-d', $cur_ts ),
+				'title'      => wp_trim_words( $cal_post->post_title, 4, '…' ),
+				'full_title' => $cal_post->post_title,
+				'url'        => get_permalink( $cal_post->ID ),
+				'photo'      => get_the_post_thumbnail_url( $cal_post->ID, 'thumbnail' ) ?: '',
 			);
 			$cur_ts = strtotime( '+1 day', $cur_ts );
 			$day_count++;
